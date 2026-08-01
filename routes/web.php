@@ -1,18 +1,12 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\ProjectTemplateController;
+use App\Http\Controllers\ProjectController;
 
-// Redirect root to projects or templates
-Route::get('/', function () {
-    return view('stage-templates', ['initialView' => 'templates']);
-})->name('templates');
+// Stage Templates Routes
+Route::get('/', [ProjectTemplateController::class, 'index'])->name('templates');
 
-// Dedicated Projects Portfolio Route
-Route::get('/projects', function () {
-    return view('stage-templates', ['initialView' => 'projects']);
-})->name('projects.index');
-
-// Individual Project Route
-Route::get('/projects/{project}', function ($project) {
-    return view('stage-templates', ['initialView' => 'projects', 'activeProjectRef' => $project]);
-})->name('projects.show');
+// Projects Portfolio Routes
+Route::get('/projects', [ProjectController::class, 'index'])->name('projects.index');
+Route::get('/projects/{project}', [ProjectController::class, 'show'])->name('projects.show');
