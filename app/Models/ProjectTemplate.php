@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1); 
+
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
@@ -16,12 +18,17 @@ class ProjectTemplate extends Model
         'tracksCount', 
         'milestonesCount' , 
         'subMilestonesCount' , 
-        'isActive' , 
-        'tracks' ,  
+        'isActive' ,  
     ];
  
   protected $cast = [
-        'tracks' => 'array',
+        // 
+         'name' => 'string', 
+         'description'=> 'string',
+         'tracksCount'=> 'double', 
+         'milestonesCount' => 'double', 
+         'subMilestonesCount' => 'double', 
+         'isActive' => 'boolean', 
     ];
 
     public function projectsTemplates()
