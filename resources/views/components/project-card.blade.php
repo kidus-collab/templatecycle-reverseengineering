@@ -40,7 +40,7 @@
         <!-- Go to project Button -->
         <a 
             href="{{ route('projects.show', $project['ref']) }}"
-            class="btn btn-xs w-full bg-amber-100/80 hover:bg-amber-200 text-amber-950 border border-amber-300/90 rounded-lg text-[11px] font-semibold normal-case flex items-center justify-center gap-1 shadow-2xs py-1">
+            class="btn btn-xs w-fit px-3 bg-amber-100/80 hover:bg-amber-200 text-amber-950 border border-amber-300/90 rounded-lg text-[11px] font-semibold normal-case inline-flex items-center justify-center gap-1 shadow-2xs py-1">
             <span>Go to project</span>
             <i data-lucide="arrow-right" class="w-3 h-3 text-amber-800"></i>
         </a>

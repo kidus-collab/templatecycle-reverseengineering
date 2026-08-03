@@ -43,7 +43,7 @@
                 <!-- Create New Template Button -->
                 <button 
                     @click="openCreateModal()" 
-                    class="w-full btn btn-outline btn-xs text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 font-medium normal-case rounded-lg flex items-center justify-center gap-1.5 py-1.5">
+                    class="w-fit px-4 btn btn-outline btn-xs text-gray-700 border-gray-300 hover:bg-gray-50 hover:border-gray-400 font-medium normal-case rounded-lg flex items-center justify-center gap-1.5 py-1.5">
                     <i data-lucide="plus" class="w-3.5 h-3.5 text-gray-600"></i>
                     <span>Create new template</span>
                 </button>
@@ -85,10 +85,10 @@
 
                 <!-- Top Metrics Bar Components -->
                 <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <x-metric-card label="TRACKS" ::value="activeTemplate.tracksCount" subtext="0 active stages" />
-                    <x-metric-card label="PHASES" ::value="activeTemplate.phasesCount" subtext="Ordered stage sequence" />
-                    <x-metric-card label="MILESTONES" ::value="activeTemplate.milestonesCount" subtext="Major checkpoints" />
-                    <x-metric-card label="SUB-MILESTONES" ::value="activeTemplate.subMilestonesCount" subtext="Detailed stage checks" />
+                    <x-metric-card label="TRACKS" x-text="activeTemplate.tracksCount" subtext="0 active stages" />
+                    <x-metric-card label="PHASES" x-text="activeTemplate.phasesCount" subtext="Ordered stage sequence" />
+                    <x-metric-card label="MILESTONES" x-text="activeTemplate.milestonesCount" subtext="Major checkpoints" />
+                    <x-metric-card label="SUB-MILESTONES" x-text="activeTemplate.subMilestonesCount" subtext="Detailed stage checks" />
                 </div>
 
                 <!-- Tracks & Phases Main Editor Box -->
