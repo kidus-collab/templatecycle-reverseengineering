@@ -13,25 +13,25 @@ class Project extends Model
     protected $fillable = [
                 'ref' ,
                 'name',
-                'appliedTrack' ,
-                'progressPercent',
+                'tags' ,
+                 'moreTags',
                 'milestones',
                 'subMilestones',
-                'status' ,
-                'phases',
     ];
 
     protected $cast = [
         // 
-               'ref' => 'string',
+                'ref' => 'string',
                 'name' => 'string',
-                'appliedTrack => string' ,
-                'progressPercent'=> 'double',
+                'tags' => 'array',
+                'moreTags' => 'string',
                 'milestones' => 'string',
                 'subMilestones' => 'string',
-                'status' => 'string',
-                'phases' => 'array',
     ];
 
 
+    public function templates()
+    {
+        return $this->hasOne(ProjectTemplate::class);
+    }
 }
