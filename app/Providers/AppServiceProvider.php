@@ -24,6 +24,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->configureDefaults();
+        
+        \Illuminate\Support\Facades\Blade::component('layouts.app', 'app-layout');
     }
 
     /**
