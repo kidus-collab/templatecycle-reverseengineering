@@ -12,6 +12,11 @@ class Milestone extends Model
         'track_id',
         'parent_id',
         'title',
+        'starred',
+    ];
+
+    protected $casts = [
+        'starred' => 'boolean',
     ]; 
     
     public function track(): BelongsTo 

@@ -15,21 +15,27 @@ class PortfolioSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. CREATE TEMPLATE & TRACK
-        $template = ProjectTemplate::create([
-            'name' => 'Construction Template',
-            'description' => 'Standard template for construction projects.',
-            'tracks_count' => 1,
-            'milestones_count' => 8,
-            'sub_milestones_count' => 12,
-            'is_active' => true,
-        ]);
+        // 1. FETCH TEMPLATE & TRACK
+        $template = ProjectTemplate::where('name', 'Construction template')->first();
+        if (!$template) {
+            $template = ProjectTemplate::create([
+                'name' => 'Construction Template',
+                'description' => 'Standard template for construction projects.',
+                'tracks_count' => 1,
+                'milestones_count' => 8,
+                'sub_milestones_count' => 12,
+                'is_active' => true,
+            ]);
+        }
 
-        $track = Track::create([
-            'project_template_id' => $template->id,
-            'name' => 'Construction Track',
-            'phase_name' => 'Construction Phase',
-        ]);
+        $track = Track::where('project_template_id', $template->id)->first();
+        if (!$track) {
+            $track = Track::create([
+                'project_template_id' => $template->id,
+                'name' => 'Construction Track',
+                'phase_name' => 'Construction Phase',
+            ]);
+        }
 
         // (We could create blueprint Milestones here too, but we will focus on Project instances for the view to work)
 

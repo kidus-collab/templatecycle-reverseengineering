@@ -61,19 +61,19 @@
                             
                             <div class="flex items-center justify-between gap-2">
                                 <h3 class="font-semibold text-xs text-gray-900 group-hover:text-amber-900 transition-colors" x-text="template.name"></h3>
-                                <span x-show="template.isActive" class="text-[9px] font-semibold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded-full uppercase tracking-wider">Active</span>
+                                <span x-show="template.is_active" class="text-[9px] font-semibold text-amber-700 bg-amber-100/80 px-1.5 py-0.2 rounded-full uppercase tracking-wider">Active</span>
                             </div>
 
                             <p class="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed" x-text="template.description"></p>
 
                             <div class="mt-2 text-[10px] font-medium text-gray-500 flex items-center gap-1 font-mono">
-                                <span x-text="template.tracksCount + 'T'"></span>
+                                <span x-text="template.tracks_count + 'T'"></span>
                                 <span>·</span>
-                                <span x-text="template.phasesCount + 'P'"></span>
+                                <span x-text="(template.tracks ? template.tracks.reduce((acc, t) => acc + (t.milestones ? t.milestones.length : 0), 0) : 0) + 'P'"></span>
                                 <span>·</span>
-                                <span x-text="template.milestonesCount + 'M'"></span>
+                                <span x-text="template.milestones_count + 'M'"></span>
                                 <span>·</span>
-                                <span x-text="template.subMilestonesCount + 'SM'"></span>
+                                <span x-text="template.sub_milestones_count + 'SM'"></span>
                             </div>
                         </div>
                     </template>
@@ -85,10 +85,10 @@
 
                 <!-- Top Metrics Bar Components -->
                 <div class="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                    <x-metric-card label="TRACKS" x-text="activeTemplate.tracksCount" subtext="0 active stages" />
-                    <x-metric-card label="PHASES" x-text="activeTemplate.phasesCount" subtext="Ordered stage sequence" />
-                    <x-metric-card label="MILESTONES" x-text="activeTemplate.milestonesCount" subtext="Major checkpoints" />
-                    <x-metric-card label="SUB-MILESTONES" x-text="activeTemplate.subMilestonesCount" subtext="Detailed stage checks" />
+                    <x-metric-card label="TRACKS" x-text="activeTemplate ? activeTemplate.tracks_count : 0" subtext="0 active stages" />
+                    <x-metric-card label="PHASES" x-text="activeTemplate && activeTemplate.tracks ? activeTemplate.tracks.reduce((acc, t) => acc + (t.milestones ? t.milestones.length : 0), 0) : 0" subtext="Ordered stage sequence" />
+                    <x-metric-card label="MILESTONES" x-text="activeTemplate ? activeTemplate.milestones_count : 0" subtext="Major checkpoints" />
+                    <x-metric-card label="SUB-MILESTONES" x-text="activeTemplate ? activeTemplate.sub_milestones_count : 0" subtext="Detailed stage checks" />
                 </div>
 
                 <!-- Tracks & Phases Main Editor Box -->
@@ -103,6 +103,7 @@
                             </div>
 
                             <div class="space-y-1.5">
+                                <template x-if="activeTemplate">
                                 <template x-for="track in activeTemplate.tracks" :key="track.id">
                                     <button 
                                         @click="activeTrackId = track.id"
@@ -118,8 +119,9 @@
                                         <span 
                                             :class="activeTrackId === track.id ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-200/80 text-gray-600'"
                                             class="text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center shrink-0" 
-                                            x-text="track.count"></span>
+                                            x-text="track.milestones ? track.milestones.length : 0"></span>
                                     </button>
+                                </template>
                                 </template>
                             </div>
 
@@ -141,7 +143,7 @@
                                                 <i data-lucide="grip-vertical" class="w-3.5 h-3.5"></i>
                                             </div>
                                             <i data-lucide="chevron-right" class="w-3.5 h-3.5 text-gray-400 shrink-0"></i>
-                                            <span class="text-xs font-semibold text-gray-900 truncate" x-text="phase.name"></span>
+                                            <span class="text-xs font-semibold text-gray-900 truncate" x-text="phase.title"></span>
                                         </div>
 
                                         <div class="flex items-center gap-2 pl-2 shrink-0">
@@ -241,7 +243,7 @@
                 get currentPhases() {
                     if (!this.activeTemplate || !this.activeTemplate.tracks) return [];
                     const track = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId);
-                    return track ? (track.phases || []) : [];
+                    return track ? (track.milestones || []) : [];
                 },
 
                 selectTemplate(template) {
@@ -254,9 +256,8 @@
 
                 deletePhase(index) {
                     const track = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId);
-                    if (track && track.phases) {
-                        track.phases.splice(index, 1);
-                        track.count = track.phases.length;
+                    if (track && track.milestones) {
+                        track.milestones.splice(index, 1);
                     }
                     this.$root.refreshIcons();
                     this.$root.showNotification('Phase removed from sequence.');
@@ -271,10 +272,8 @@
                     if (!this.newPhaseName.trim()) return;
                     const track = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId);
                     if (track) {
-                        if (!track.phases) track.phases = [];
-                        track.phases.push({ id: Date.now(), name: this.newPhaseName.trim(), starred: false });
-                        track.count = track.phases.length;
-                        this.activeTemplate.phasesCount++;
+                        if (!track.milestones) track.milestones = [];
+                        track.milestones.push({ id: Date.now(), title: this.newPhaseName.trim(), starred: false });
                     }
                     document.getElementById('add_phase_modal').close();
                     this.$root.showNotification(`Phase '${this.newPhaseName}' added successfully.`);
@@ -293,8 +292,8 @@
                         id: 'tpl-' + Date.now(),
                         name: this.newTemplate.name.trim(),
                         description: this.newTemplate.description.trim() || 'Custom template stage workflow',
-                        tracksCount: 1, phasesCount: 1, milestonesCount: 0, subMilestonesCount: 0, isActive: false,
-                        tracks: [{ id: 'tr-' + Date.now(), name: 'Primary Stage', count: 1, phases: [{ id: Date.now(), name: 'Initial Kickoff Phase', starred: false }] }]
+                        tracks_count: 1, milestones_count: 0, sub_milestones_count: 0, is_active: false,
+                        tracks: [{ id: 'tr-' + Date.now(), name: 'Primary Stage', count: 1, milestones: [{ id: Date.now(), title: 'Initial Kickoff Phase', starred: false }] }]
                     };
                     this.templates.unshift(newTpl);
                     this.selectTemplate(newTpl);

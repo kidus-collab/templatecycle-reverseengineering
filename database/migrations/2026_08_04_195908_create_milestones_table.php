@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('track_id')->constrained()->cascadeOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('milestones')->cascadeOnDelete();
             $table->string('title');
+            $table->boolean('starred')->default(false);
             $table->timestamps();
         });
     }
