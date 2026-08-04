@@ -22,4 +22,9 @@ class ProjectDetail extends Model
     {
         return $this->belongsTo(Project::class);
     }
+
+    public function phases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ProjectPhase::class);
+    }
 }

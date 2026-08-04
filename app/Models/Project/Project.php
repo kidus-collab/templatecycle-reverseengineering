@@ -35,8 +35,8 @@ class Project extends Model
         return $this->hasOne(ProjectDetail::class);
     }
 
-    public function phases(): HasMany
+    public function phases(): \Illuminate\Database\Eloquent\Relations\HasManyThrough
     {
-        return $this->hasMany(ProjectPhase::class);
+        return $this->hasManyThrough(ProjectPhase::class, ProjectDetail::class);
     }
 }

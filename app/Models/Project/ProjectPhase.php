@@ -26,4 +26,9 @@ class ProjectPhase extends Model
     {
         return $this->belongsTo(ProjectDetail::class);
     }
+
+    public function milestoneCheckpoints(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(MilestoneCheckpoint::class);
+    }
 }
