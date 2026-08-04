@@ -1,7 +1,6 @@
 <?php
 
-namespace App\Models;
-
+namespace App\Template\Models;
 use Illuminate\Database\Eloquent\Model;
 
 class Tracks extends Model

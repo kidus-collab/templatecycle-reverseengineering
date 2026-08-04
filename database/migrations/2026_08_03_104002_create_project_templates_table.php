@@ -13,6 +13,16 @@ return new class extends Migration
     {
         Schema::create('project_templates', function (Blueprint $table) {
             $table->id();
+     
+          // Foregin key constraints 
+          $table->foreignId('projects_id')->constrained()->cascadeOnDelete();
+
+            $table->string('name')->unique();
+            $table->string('description')->nullable();
+            $table->string('trackCount')->default(0);
+            $table->string('milestonesCount')->default(0);
+            $table->string('subMilestonesCount')->default(0);
+             $table->boolean('isActive')->default(false);
             $table->timestamps();
         });
     }
