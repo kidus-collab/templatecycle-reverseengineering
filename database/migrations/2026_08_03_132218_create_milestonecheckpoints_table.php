@@ -13,9 +13,12 @@ return new class extends Migration
     {
         Schema::create('milestone_checkpoints', function (Blueprint $table) {
             $table->id();
+
+            // foreign keys 
             $table->foreignId('project_phase_id')->constrained()->cascadeOnDelete();
             $table->foreignId('track_id')->constrained()->cascadeOnDelete();
             $table->foreignId('parent_id')->nullable()->constrained('milestone_checkpoints')->cascadeOnDelete();
+         
             $table->string('title');
             $table->boolean('done')->default(false);
             $table->timestamps();

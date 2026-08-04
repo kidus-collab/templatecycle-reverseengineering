@@ -16,6 +16,7 @@ return new class extends Migration
             $table->foreignId('project_template_id')->constrained()->cascadeOnDelete();
             $table->string('ref');
             $table->string('name');
+            //json 
             $table->json('tags')->nullable();
             $table->string('more_tags')->nullable();
             $table->timestamps();
