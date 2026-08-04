@@ -2,39 +2,40 @@
 
 declare(strict_types=1); 
 
-namespace App\Template\Models;
+namespace App\Models\Template;
 
+use App\Models\Project\Project;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class ProjectTemplate extends Model
 {
-    //
-     use HasFactory;
+    use HasFactory;
 
-   protected  $fillable = [
+    protected $fillable = [
         'name',
         'description',
-        'tracksCount', 
-        'milestonesCount' , 
-        'subMilestonesCount' , 
-        'isActive' ,  
+        'tracks_count', 
+        'milestones_count', 
+        'sub_milestones_count', 
+        'is_active',  
     ];
  
-  protected $cast = [
-        // 
-         'name' => 'string', 
-         'description'=> 'string',
-         'tracksCount'=> 'double', 
-         'milestonesCount' => 'double', 
-         'subMilestonesCount' => 'double', 
-         'isActive' => 'boolean', 
+    protected $casts = [
+         'tracks_count' => 'integer', 
+         'milestones_count' => 'integer', 
+         'sub_milestones_count' => 'integer', 
+         'is_active' => 'boolean', 
     ];
 
-    public function projectsTemplates()
+    public function projects(): HasMany
     {
-        return $this->hasOne(Project::class);
+        return $this->hasMany(Project::class);
     }
      
-
+    public function tracks(): HasMany
+    {
+        return $this->hasMany(Track::class);
+    }
 }

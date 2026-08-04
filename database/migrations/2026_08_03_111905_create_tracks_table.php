@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('tracks', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_template_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('phase_name')->nullable();
             $table->timestamps();
         });
     }

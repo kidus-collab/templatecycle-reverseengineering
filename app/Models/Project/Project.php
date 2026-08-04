@@ -1,36 +1,42 @@
 <?php
-namespace App\Project\Models;
 
+namespace App\Models\Project;
+
+use App\Models\Template\ProjectTemplate;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 class Project extends Model
 {
     use HasFactory; 
-   
 
     protected $fillable = [
-                'ref' ,
-                'name',
-                'tags' ,
-                 'moreTags',
-                'milestones',
-                'subMilestones',
+        'project_template_id',
+        'ref',
+        'name',
+        'tags',
+        'more_tags',
     ];
 
-    protected $cast = [
-        // 
-                'ref' => 'string',
-                'name' => 'string',
-                'tags' => 'array',
-                'moreTags' => 'string',
-                'milestones' => 'string',
-                'subMilestones' => 'string',
+    protected $casts = [
+        'tags' => 'array',
     ];
 
-
-    public function templates()
+    public function projectTemplate(): BelongsTo
     {
-        return $this->hasOne(ProjectTemplate::class);
+        return $this->belongsTo(ProjectTemplate::class);
+    }
+
+    public function details(): HasOne
+    {
+        return $this->hasOne(ProjectDetail::class);
+    }
+
+    public function phases(): HasMany
+    {
+        return $this->hasMany(ProjectPhase::class);
     }
 }

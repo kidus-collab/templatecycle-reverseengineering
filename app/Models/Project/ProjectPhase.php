@@ -1,29 +1,29 @@
 <?php
 
-namespace App\Project\Models;
+namespace App\Models\Project;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class phases extends Model
+class ProjectPhase extends Model
 {
-   protected $fillable = [
-                        'name' ,
-                        'status' ,
-                        'progress',
-                        'milestonesCount',
-                        'subMilestonesCount',
+    protected $fillable = [
+        'project_detail_id',
+        'name',
+        'status',
+        'progress',
+        'milestones_count',
+        'sub_milestones_count',
     ];
 
-    protected $cast = [
-        // 
-                 'name' => 'string',
-                 'status' => 'string',
-                 'milestonesCount' => 'string',
-                 'subMilestonesCount' => 'string',
+    protected $casts = [
+        'progress' => 'integer',
+        'milestones_count' => 'integer',
+        'sub_milestones_count' => 'integer',
     ];
 
-    public function projectDetails() : Belongsto 
+    public function projectDetail(): BelongsTo 
     {
-        return $this->Belongsto(ProjectDetails::class , 'foreign_key');
+        return $this->belongsTo(ProjectDetail::class);
     }
 }

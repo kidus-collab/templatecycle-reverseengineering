@@ -11,8 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('phases', function (Blueprint $table) {
+        Schema::create('project_phases', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_detail_id')->constrained()->cascadeOnDelete();
+            $table->string('name');
+            $table->string('status')->nullable();
+            $table->integer('progress')->default(0);
+            $table->integer('milestones_count')->default(0);
+            $table->integer('sub_milestones_count')->default(0);
             $table->timestamps();
         });
     }
@@ -22,6 +28,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('phases');
+        Schema::dropIfExists('project_phases');
     }
 };

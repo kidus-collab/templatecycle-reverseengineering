@@ -11,8 +11,13 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('checkpoints', function (Blueprint $table) {
+        Schema::create('milestone_checkpoints', function (Blueprint $table) {
             $table->id();
+            $table->foreignId('project_phase_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('track_id')->constrained()->cascadeOnDelete();
+            $table->foreignId('parent_id')->nullable()->constrained('milestone_checkpoints')->cascadeOnDelete();
+            $table->string('title');
+            $table->boolean('done')->default(false);
             $table->timestamps();
         });
     }
@@ -22,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('checkpoints');
+        Schema::dropIfExists('milestone_checkpoints');
     }
 };
