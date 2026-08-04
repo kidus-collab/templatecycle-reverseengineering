@@ -8,12 +8,12 @@
                 <div class="text-[10px] font-semibold tracking-wider text-amber-700/70 uppercase mb-0.5 flex items-center gap-1">
                     <span>PROJECT PORTFOLIO</span>
                     <span>•</span>
-                    <span>{{ $project['ref'] }}</span>
+                    <span>{{ $project->ref }}</span>
                 </div>
                 <div class="flex items-center gap-2">
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">{{ $project['name'] }}</h1>
+                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">{{ $project->name }}</h1>
                     <span class="bg-amber-100 text-amber-900 text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-200" title="Applied Track">
-                        1 Track: {{ $project['appliedTrack'] }}
+                        1 Track: {{ $project->details->applied_track ?? 'Construction Track' }}
                     </span>
                 </div>
             </div>
@@ -31,22 +31,22 @@
             <div class="bg-white p-3.5 rounded-xl border border-gray-200/90 shadow-2xs">
                 <div class="text-[9px] font-bold tracking-widest text-gray-400 uppercase">OVERALL PROGRESS</div>
                 <div class="flex items-center justify-between mt-1">
-                    <span class="text-xl font-bold text-gray-900">{{ $project['progressPercent'] }}%</span>
-                    <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">{{ $project['status'] }}</span>
+                    <span class="text-xl font-bold text-gray-900">{{ $project->details->progress_percent ?? 0 }}%</span>
+                    <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">{{ $project->details->status ?? 'Upcoming' }}</span>
                 </div>
                 <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: {{ $project['progressPercent'] }}%"></div>
+                    <div class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: {{ $project->details->progress_percent ?? 0 }}%"></div>
                 </div>
             </div>
 
             <!-- Milestones Counter Card -->
-            <x-metric-card label="MILESTONES COMPLETE" :value="$project['milestones']" subtext="Major stage checkpoints" />
+            <x-metric-card label="MILESTONES COMPLETE" :value="$project->phases->sum('progress') > 0 ? $project->phases->sum('milestones_count') . '/128' : '0/128'" subtext="Major stage checkpoints" />
 
             <!-- Sub-milestones Counter Card -->
-            <x-metric-card label="SUB-MILESTONES COMPLETE" :value="$project['subMilestones']" subtext="Detailed stage checks" />
+            <x-metric-card label="SUB-MILESTONES COMPLETE" :value="$project->phases->sum('progress') > 0 ? $project->phases->sum('sub_milestones_count') . '/723' : '0/723'" subtext="Detailed stage checks" />
 
             <!-- Applied Track Card -->
-            <x-metric-card label="APPLIED TEMPLATE TRACK" :value="$project['appliedTrack']" subtext="Single track limit enforced" />
+            <x-metric-card label="APPLIED TEMPLATE TRACK" :value="$project->details->applied_track ?? 'Construction Track'" subtext="Single track limit enforced" />
         </div>
 
         <!-- TEMPLATE PROGRESS MILESTONES SECTION -->
@@ -137,7 +137,13 @@
     <script>
         function projectDetail() {
             return {
-                phases: @json($project['phases']).map(p => ({ ...p, expanded: p.status === 'In Progress' })),
+                phases: @json($project->phases).map(p => ({ 
+                    ...p, 
+                    expanded: p.status === 'In Progress',
+                    milestonesCount: p.milestones_count + '/' + (p.milestones_count > 0 ? p.milestones_count : 0),
+                    subMilestonesCount: p.sub_milestones_count + '/' + (p.sub_milestones_count > 0 ? p.sub_milestones_count : 0),
+                    checkpoints: p.milestone_checkpoints || p.milestoneCheckpoints || []
+                })),
 
                 recalculatePhaseProgress(phase) {
                     const total = phase.checkpoints.length;
