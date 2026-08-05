@@ -21,10 +21,19 @@ class ProjectService
         $tag = $template ? ($template->tracks->first()?->name ?? 'Construction Track') : 'Construction Track';
 
         // 1. Tell the repository to create the project
-        $project = $this->projectRepo->createProjectRecord($data, $template?->id, $tag);
+        $project = $this->projectRepo->createProjectRecord([
+            'ref' => $data['ref'],
+            'name' => $data['name'],
+            'tags' => [$tag],
+            'project_template_id' => $template?->id,
+        ]);
 
         // 2. Tell the repository to create the details
-        $detail = $this->projectRepo->createDetailRecord($project, $tag);
+        $detail = $this->projectRepo->createDetailRecord([
+            'applied_track' => $tag,
+            'progress_percent' => 0,
+            'status' => 'Upcoming',
+        ], $project->id);
 
         // 3. Tell the repository to copy templates
         if ($template) {

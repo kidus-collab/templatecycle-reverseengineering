@@ -17,27 +17,19 @@ class ProjectRepository implements ProjectRepositoryInterface
         return Project::with(['details', 'phases'])->get();
     }
 
-    public function createProjectRecord(array $data, ?int $templateId, string $tag): Project
+    public function createProject(array $data): Project
     {
-        $project = new Project([
-            'ref' => $data['ref'],
-            'name' => $data['name'],
-            'tags' => [$tag],
-        ]);
-        $project->project_template_id = $templateId;
+        $project = new Project($data);
         $project->save();
 
         return $project;
     }
 
-    public function createDetailRecord(Project $project, string $tag): ProjectDetail
+    public function createProjectDetail(array $data, int $projectId): ProjectDetail
     {
-        $detail = new ProjectDetail([
-            'applied_track' => $tag,
-            'progress_percent' => 0,
-            'status' => 'Upcoming',
-        ]);
-        $project->details()->save($detail);
+        $detail = new ProjectDetail($data);
+        $detail->project_id = $projectId;
+        $detail->save();
 
         return $detail;
     }
@@ -61,12 +53,12 @@ class ProjectRepository implements ProjectRepositoryInterface
         return $checkpoint;
     }
 
-    public function loadProjectRelations(Project $project): Project
+    public function loadProjectMilestones(Project $project): Project
     {
         return $project->load(['details', 'phases.milestoneCheckpoints']);
     }
 
-    public function updateProjectRecord(Project $project, array $data): Project
+    public function updateProjectDetail(Project $project, array $data): Project
     {
         $project->update([
             'name' => $data['name'],
