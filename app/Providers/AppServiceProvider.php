@@ -20,7 +20,7 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
-        $this->app->bind(TemplateRepositoryInterface::class, TemplateRepository::class);
+        $this->app->bind(ProjectTemplateRepositoryInterface::class, ProjectTemplateRepository::class);
     }
 
     /**

@@ -9,7 +9,7 @@ use App\Models\Template\Milestone;
 
 
 
-interface TemplateRepositoryInterface  { 
+interface ProjectTemplateRepositoryInterface  { 
 
-
+   // 
 }

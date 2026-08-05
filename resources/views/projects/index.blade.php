@@ -137,7 +137,9 @@
 
                     <div class="modal-action mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
                         <button type="button" onclick="document.getElementById('edit_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
-                        <button type="submit" class="btn btn-xs rounded-lg normal-case font-semibold bg-amber-200 hover:bg-amber-300 text-amber-950 border-amber-300">Update Project</button>
+                        <button type="submit" class="btn btn-xs rounded-lg normal-case font-semibold bg-amber-200 hover:bg-amber-300 text-amber-950 border-amber-300">
+                            <i data-lucide="save" class="w-3.5 h-3.5 mr-1"></i>Update Project
+                        </button>
                     </div>
                 </form>
             </div>
@@ -169,7 +171,9 @@
                     @method('DELETE')
                     <div class="modal-action flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
                         <button type="button" onclick="document.getElementById('delete_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
-                        <button type="submit" class="btn bg-rose-600 hover:bg-rose-700 text-white btn-xs rounded-lg normal-case border-rose-600">Yes, Delete Project</button>
+                        <button type="submit" class="btn bg-rose-600 hover:bg-rose-700 text-white btn-xs rounded-lg normal-case border-rose-600">
+                            <i data-lucide="trash-2" class="w-3.5 h-3.5 mr-1"></i>Yes, Delete Project
+                        </button>
                     </div>
                 </form>
             </div>
@@ -183,6 +187,19 @@
             return {
                 editProject: { currentRef: '', ref: '', name: '', status: 'Upcoming' },
                 deleteProject: { ref: '', name: '' },
+
+                init() {
+                    // Check if there are validation errors to reopen the add modal
+                    @if ($errors->any())
+                        // We check if it's a POST request which means it was an add request.
+                        // Since we can't easily know the exact modal, we'll open add modal if it's not a PUT/DELETE request
+                        @if (request()->isMethod('POST'))
+                            this.$nextTick(() => {
+                                this.openAddProjectModal();
+                            });
+                        @endif
+                    @endif
+                },
 
                 openAddProjectModal() {
                     document.getElementById('add_project_modal').showModal();

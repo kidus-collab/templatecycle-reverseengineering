@@ -22,24 +22,35 @@ class ProjectRequest extends FormRequest
      */
     public function rules(): array
     {
-        // Rules for  Both Create & Update 
+        // Rules for Both Create & Update
         $rules = [ 'name' => 'required|string|max:255'];
 
-           // 2. Rules for CREATE 
-           if ($this->isMethod('POST')) {
+        // 2. Rules for CREATE 
+        if ($this->isMethod('POST')) {
+            $rules['name'] = 'required|string|max:255|unique:projects,name';
             $rules['ref'] = 'required|string|max:255|unique:projects,ref';
             $rules['project_template_id'] = 'nullable|exists:project_templates,id';
         }
            
-              // 3. Rules for  UPDATE 
-         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
-            $projectId = $this->route('project')->id;
+        // 3. Rules for  UPDATE 
+        if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
+            $projectId = $this->route('project') ? $this->route('project')->id : null;
             
-            $rules['ref'] = 'required|string|max:255|unique:projects,ref,' . $projectId;
+            if ($projectId) {
+                $rules['name'] = 'required|string|max:255|unique:projects,name,' . $projectId;
+                $rules['ref'] = 'required|string|max:255|unique:projects,ref,' . $projectId;
+            }
             $rules['status'] = 'nullable|string|max:255';
         }
 
-        
-              return $rules;
+        return $rules;
+    }
+
+    // Error Message for duplciate records 
+    public function messages(): array
+    {
+        return [
+            'unique' => 'Record is already available, please change the :attribute or it is a duplicate data error.',
+        ];
     }
 }
