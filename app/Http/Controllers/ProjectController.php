@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Repositories\ProjectRepositoryInterface;
+use App\Http\Requests\ProjectRequest;   
+use App\Services\ProjectService;
 
 
 use App\Models\Template\ProjectTemplate;
@@ -26,13 +28,9 @@ class ProjectController extends Controller
     /**
      * Store a newly created project in database.
      */
-    public function store(Request $request)
+    public function store(ProjectRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'ref' => 'required|string|max:255|unique:projects,ref',
-            'project_template_id' => 'nullable|exists:project_templates,id',
-        ]);
+        $validated = $request->validated();
 
         $template = !empty($validated['project_template_id']) 
             ? ProjectTemplate::with('tracks.milestones')->find($validated['project_template_id']) 
