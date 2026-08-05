@@ -41,22 +41,33 @@
             <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 max-w-sm">
                 <h3 class="font-bold text-base text-gray-900">Add New Project</h3>
                 <p class="py-1 text-[11px] text-gray-500">Create a new project to track in your portfolio.</p>
-                <div class="space-y-2.5 mt-2">
-                    <div class="form-control w-full">
-                        <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Project Name</span></label>
-                        <input type="text" x-model="newProject.name" placeholder="e.g., Skyline Tower" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs" />
+
+                <form method="POST" action="{{ route('projects.store') }}">
+                    @csrf
+                    <div class="space-y-2.5 mt-2">
+                        <div class="form-control w-full">
+                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Project Name</span></label>
+                            <input type="text" name="name" required placeholder="e.g., Skyline Tower" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs" />
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Reference Code</span></label>
+                            <input type="text" name="ref" required placeholder="e.g., MC26-L-G2-ST1" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs font-mono" />
+                        </div>
+                        <div class="form-control w-full">
+                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Initial Stage Template</span></label>
+                            <select name="project_template_id" class="select select-sm select-bordered w-full rounded-lg focus:border-amber-400 text-xs">
+                                <option value="">-- No Template (Custom) --</option>
+                                @foreach($templates as $template)
+                                    <option value="{{ $template->id }}">{{ $template->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
                     </div>
-                    <div class="form-control w-full">
-                        <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Reference Code</span></label>
-                        <input type="text" x-model="newProject.ref" placeholder="e.g., MC26-L-G2-ST1" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs font-mono" />
+                    <div class="modal-action mt-4 flex gap-2 justify-end">
+                        <button type="button" onclick="document.getElementById('add_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case">Save Project</button>
                     </div>
-                </div>
-                <div class="modal-action mt-4">
-                    <form method="dialog" class="flex gap-2">
-                        <button class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
-                        <button type="button" @click="addProject()" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case">Add Project</button>
-                    </form>
-                </div>
+                </form>
             </div>
         </dialog>
 

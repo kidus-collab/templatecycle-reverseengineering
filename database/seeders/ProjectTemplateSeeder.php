@@ -148,7 +148,6 @@ class ProjectTemplateSeeder extends Seeder
                             'track_id' => $track->id,
                             'parent_id' => null,
                             'title' => $phaseData['name'],
-                            'starred' => $phaseData['starred'] ?? false,
                         ]);
                     }
                 } else {
@@ -159,7 +158,6 @@ class ProjectTemplateSeeder extends Seeder
                             'track_id' => $track->id,
                             'parent_id' => null,
                             'title' => 'Dummy Phase ' . $i,
-                            'starred' => false,
                         ]);
                     }
                 }

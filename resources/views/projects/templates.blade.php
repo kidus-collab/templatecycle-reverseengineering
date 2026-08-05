@@ -148,13 +148,6 @@
 
                                         <div class="flex items-center gap-2 pl-2 shrink-0">
                                             <button 
-                                                @click="phase.starred = !phase.starred; $root.refreshIcons()" 
-                                                class="text-gray-300 hover:text-amber-500 transition-colors p-0.5" 
-                                                :class="{'text-amber-400': phase.starred}">
-                                                <i data-lucide="star" class="w-3.5 h-3.5" :class="{'fill-amber-400': phase.starred}"></i>
-                                            </button>
-
-                                            <button 
                                                 @click="deletePhase(index)" 
                                                 class="text-gray-300 hover:text-red-500 transition-colors p-0.5">
                                                 <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
@@ -221,6 +214,31 @@
             </div>
         </dialog>
 
+        <!-- Apply Template Modal -->
+        <dialog id="apply_template_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 max-w-sm">
+                <h3 class="font-bold text-base text-gray-900">Apply Template to Project</h3>
+                <p class="py-1 text-[11px] text-gray-500">Select a project to apply <span class="font-semibold text-amber-900" x-text="activeTemplate ? activeTemplate.name : ''"></span>.</p>
+
+                <form :action="activeTemplate ? `/templates/${activeTemplate.id}/apply` : '#'" method="POST">
+                    @csrf
+                    <div class="form-control w-full mt-2">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Target Project</span></label>
+                        <select name="project_id" required class="select select-sm select-bordered w-full rounded-lg focus:border-amber-400 text-xs">
+                            <option value="">-- Select Project --</option>
+                            @foreach($projects as $project)
+                                <option value="{{ $project->id }}">{{ $project->name }} ({{ $project->ref }})</option>
+                            @endforeach
+                        </select>
+                    </div>
+                    <div class="modal-action mt-4 flex gap-2 justify-end">
+                        <button type="button" onclick="document.getElementById('apply_template_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case">Apply Template</button>
+                    </div>
+                </form>
+            </div>
+        </dialog>
+
     </div>
 
     <script>
@@ -273,7 +291,7 @@
                     const track = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId);
                     if (track) {
                         if (!track.milestones) track.milestones = [];
-                        track.milestones.push({ id: Date.now(), title: this.newPhaseName.trim(), starred: false });
+                        track.milestones.push({ id: Date.now(), title: this.newPhaseName.trim() });
                     }
                     document.getElementById('add_phase_modal').close();
                     this.$root.showNotification(`Phase '${this.newPhaseName}' added successfully.`);
@@ -293,7 +311,7 @@
                         name: this.newTemplate.name.trim(),
                         description: this.newTemplate.description.trim() || 'Custom template stage workflow',
                         tracks_count: 1, milestones_count: 0, sub_milestones_count: 0, is_active: false,
-                        tracks: [{ id: 'tr-' + Date.now(), name: 'Primary Stage', count: 1, milestones: [{ id: Date.now(), title: 'Initial Kickoff Phase', starred: false }] }]
+                        tracks: [{ id: 'tr-' + Date.now(), name: 'Primary Stage', count: 1, milestones: [{ id: Date.now(), title: 'Initial Kickoff Phase' }] }]
                     };
                     this.templates.unshift(newTpl);
                     this.selectTemplate(newTpl);
@@ -302,7 +320,8 @@
                 },
 
                 applyToProject() {
-                    this.$root.showNotification(`Template track '${this.activeTemplate.name}' applied to project (1 track limit enforced).`);
+                    if (!this.activeTemplate) return;
+                    document.getElementById('apply_template_modal').showModal();
                 }
             }
         }
