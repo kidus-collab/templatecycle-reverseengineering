@@ -4,10 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Models\Project\Project;
-use App\Models\Project\ProjectDetail;
-use App\Models\Project\ProjectPhase;
-use App\Models\Project\MilestoneCheckpoint;
+use App\Repositories\ProjectRepositoryInterface;
+
+
 use App\Models\Template\ProjectTemplate;
 use Illuminate\Http\Request;
 
@@ -18,7 +17,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = Project::with(['details', 'phases'])->get();
+        $projects = $this->projectRepository->getAllProjects();
         $templates = ProjectTemplate::all();
 
         return view('projects.index', compact('projects', 'templates'));
