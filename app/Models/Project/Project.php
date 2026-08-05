@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Project;
 
 use App\Models\Template\ProjectTemplate;
@@ -15,7 +17,6 @@ class Project extends Model
     use HasFactory; 
 
     protected $fillable = [
-        'project_template_id',
         'ref',
         'name',
         'tags',
@@ -23,7 +24,10 @@ class Project extends Model
     ];
 
     protected $casts = [
+        'ref' => 'string',
+        'name' => 'string',
         'tags' => 'array',
+        'more_tags' => 'string',
     ];
 
     /**

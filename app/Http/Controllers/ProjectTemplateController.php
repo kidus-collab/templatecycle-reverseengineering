@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Template\ProjectTemplate;
@@ -33,29 +35,32 @@ class ProjectTemplateController extends Controller
         $project = Project::with('details')->findOrFail($validated['project_id']);
 
         // Update project template link
-        $project->update(['project_template_id' => $template->id]);
+        $project->project_template_id = $template->id;
+        $project->save();
 
         $template->load('tracks.milestones');
 
         // Copy template tracks & milestones into project phases & checkpoints
         if ($project->details) {
             foreach ($template->tracks as $track) {
-                $phase = ProjectPhase::create([
-                    'project_detail_id' => $project->details->id,
+                $phase = new ProjectPhase([
                     'name' => $track->name,
                     'status' => 'Upcoming',
                     'progress' => 0,
                     'milestones_count' => $track->milestones->count(),
                     'sub_milestones_count' => 0,
                 ]);
+                $phase->project_detail_id = $project->details->id;
+                $phase->save();
 
                 foreach ($track->milestones as $milestone) {
-                    MilestoneCheckpoint::create([
-                        'project_phase_id' => $phase->id,
-                        'track_id' => $track->id,
+                    $checkpoint = new MilestoneCheckpoint([
                         'title' => $milestone->title,
                         'done' => false,
                     ]);
+                    $checkpoint->project_phase_id = $phase->id;
+                    $checkpoint->track_id = $track->id;
+                    $checkpoint->save();
                 }
             }
         }

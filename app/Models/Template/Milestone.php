@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models\Template;
 
 use Illuminate\Database\Eloquent\Model;
@@ -9,10 +11,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Milestone extends Model
 {
     protected $fillable = [
-        'track_id',
-        'parent_id',
         'title',
     ]; 
+    
+    protected $casts = [
+        'title' => 'string',
+    ];
     
     public function track(): BelongsTo 
     {

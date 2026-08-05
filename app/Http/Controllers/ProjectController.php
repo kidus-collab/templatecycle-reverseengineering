@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
 use App\Models\Project\Project;
@@ -39,19 +41,20 @@ class ProjectController extends Controller
 
         $tag = $template ? ($template->tracks->first()?->name ?? 'Construction Track') : 'Construction Track';
 
-        $project = Project::create([
-            'project_template_id' => $template?->id,
+        $project = new Project([
             'ref' => $validated['ref'],
             'name' => $validated['name'],
             'tags' => [$tag],
         ]);
+        $project->project_template_id = $template?->id;
+        $project->save();
 
-        $detail = ProjectDetail::create([
-            'project_id' => $project->id,
+        $detail = new ProjectDetail([
             'applied_track' => $tag,
             'progress_percent' => 0,
             'status' => 'Upcoming',
         ]);
+        $project->details()->save($detail);
 
         if ($template) {
             $this->copyTemplateToProject($template, $detail->id);
@@ -66,22 +69,24 @@ class ProjectController extends Controller
     public function copyTemplateToProject(ProjectTemplate $template, int $detailId): void
     {
         foreach ($template->tracks as $track) {
-            $phase = ProjectPhase::create([
-                'project_detail_id' => $detailId,
+            $phase = new ProjectPhase([
                 'name' => $track->name,
                 'status' => 'Upcoming',
                 'progress' => 0,
                 'milestones_count' => $track->milestones->count(),
                 'sub_milestones_count' => 0,
             ]);
+            $phase->project_detail_id = $detailId;
+            $phase->save();
 
             foreach ($track->milestones as $milestone) {
-                MilestoneCheckpoint::create([
-                    'project_phase_id' => $phase->id,
-                    'track_id' => $track->id,
+                $checkpoint = new MilestoneCheckpoint([
                     'title' => $milestone->title,
                     'done' => false,
                 ]);
+                $checkpoint->project_phase_id = $phase->id;
+                $checkpoint->track_id = $track->id;
+                $checkpoint->save();
             }
         }
     }

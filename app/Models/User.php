@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
@@ -22,7 +24,6 @@ use Illuminate\Support\Carbon;
  * @property Carbon|null $updated_at
  */
 
-
 #[Fillable(['name', 'email', 'password'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
@@ -35,12 +36,11 @@ class User extends Authenticatable
      *
      * @return array<string, string>
      */
-
-   // User::factory()->make() ;
-
     protected function casts(): array
     {
         return [
+            'name' => 'string',
+            'email' => 'string',
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
         ];

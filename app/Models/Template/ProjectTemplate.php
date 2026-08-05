@@ -23,6 +23,8 @@ class ProjectTemplate extends Model
     ];
  
     protected $casts = [
+        'name' => 'string',
+        'description'=> 'string',
          'tracks_count' => 'integer', 
          'milestones_count' => 'integer', 
          'sub_milestones_count' => 'integer', 
