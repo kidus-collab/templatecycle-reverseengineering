@@ -1,4 +1,4 @@
-<x-app-layout title="Project Progress - {{ $project['name'] }}">
+<x-app-layout title="Project Progress - {{ $project->name }}">
 
     <div class="space-y-4" x-data="projectDetail()">
         
@@ -18,11 +18,29 @@
                 </div>
             </div>
 
-            <!-- Back to Portfolio Action -->
-            <a href="{{ route('projects.index') }}" class="btn btn-outline btn-xs rounded-lg font-medium normal-case flex items-center gap-1 self-start sm:self-center">
-                <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
-                <span>Back to Portfolio</span>
-            </a>
+            <!-- Action Buttons: Edit, Delete, Back -->
+            <div class="flex items-center gap-2 self-start sm:self-center">
+                <button 
+                    type="button" 
+                    onclick="document.getElementById('edit_project_modal').showModal()"
+                    class="btn btn-xs rounded-lg font-semibold bg-amber-100 hover:bg-amber-200 text-amber-950 border border-amber-300 normal-case flex items-center gap-1">
+                    <i data-lucide="pencil" class="w-3.5 h-3.5 text-amber-800"></i>
+                    <span>Edit</span>
+                </button>
+
+                <button 
+                    type="button" 
+                    onclick="document.getElementById('delete_project_modal').showModal()"
+                    class="btn btn-xs rounded-lg font-semibold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 normal-case flex items-center gap-1">
+                    <i data-lucide="trash-2" class="w-3.5 h-3.5 text-rose-600"></i>
+                    <span>Delete</span>
+                </button>
+
+                <a href="{{ route('projects.index') }}" class="btn btn-outline btn-xs rounded-lg font-medium normal-case flex items-center gap-1">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5"></i>
+                    <span>Back to Portfolio</span>
+                </a>
+            </div>
         </header>
 
         <!-- Project Progress Summary Cards -->
@@ -131,6 +149,82 @@
                 </template>
             </div>
         </div>
+
+        <!-- Edit Project Modal -->
+        <dialog id="edit_project_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 shadow-xl max-w-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900">Edit Project</h3>
+                        <p class="py-0.5 text-[11px] text-gray-500">Update project details and status.</p>
+                    </div>
+                    <button type="button" onclick="document.getElementById('edit_project_modal').close()" class="btn btn-ghost btn-xs btn-circle text-gray-400">✕</button>
+                </div>
+
+                <form method="POST" action="{{ route('projects.update', $project) }}" class="mt-3 space-y-3">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Project Name *</span></label>
+                        <input type="text" name="name" value="{{ old('name', $project->name) }}" required class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs" />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Reference Code *</span></label>
+                        <input type="text" name="ref" value="{{ old('ref', $project->ref) }}" required class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs font-mono" />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Project Status</span></label>
+                        <select name="status" class="select select-sm select-bordered w-full rounded-lg focus:border-amber-400 text-xs bg-white">
+                            <option value="Upcoming" @selected(($project->details->status ?? 'Upcoming') === 'Upcoming')>Upcoming</option>
+                            <option value="In Progress" @selected(($project->details->status ?? '') === 'In Progress')>In Progress</option>
+                            <option value="Completed" @selected(($project->details->status ?? '') === 'Completed')>Completed</option>
+                            <option value="On Hold" @selected(($project->details->status ?? '') === 'On Hold')>On Hold</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-action mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                        <button type="button" onclick="document.getElementById('edit_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn btn-xs rounded-lg normal-case font-semibold bg-amber-200 hover:bg-amber-300 text-amber-950 border-amber-300">Update Project</button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Delete Project Confirmation Modal Popup -->
+        <dialog id="delete_project_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 shadow-xl max-w-sm">
+                <div class="flex items-center gap-3 text-rose-600 mb-2">
+                    <div class="p-2 bg-rose-50 rounded-full border border-rose-100">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900">Delete Project</h3>
+                        <p class="text-[11px] text-gray-500">Are you sure you want to proceed?</p>
+                    </div>
+                </div>
+
+                <div class="p-2.5 bg-rose-50/60 rounded-lg border border-rose-100/80 my-3">
+                    <p class="text-xs text-rose-900">
+                        You are about to permanently delete <strong class="font-semibold text-rose-950">{{ $project->name }}</strong> (<span class="font-mono text-xs">{{ $project->ref }}</span>).
+                    </p>
+                    <p class="text-[10px] text-rose-700/80 mt-1">This will remove all associated phases and milestone checkpoints. This action cannot be undone.</p>
+                </div>
+
+                <form method="POST" action="{{ route('projects.destroy', $project) }}">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-action flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                        <button type="button" onclick="document.getElementById('delete_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn bg-rose-600 hover:bg-rose-700 text-white btn-xs rounded-lg normal-case border-rose-600">Yes, Delete Project</button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
 
     </div>
 

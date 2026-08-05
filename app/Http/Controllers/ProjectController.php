@@ -88,15 +88,47 @@ class ProjectController extends Controller
 
     /**
      * Display single project detail view with stage template progress milestones.
-     * 
-     * with() N+1 query problem optimization : 2 queries 
      */
-    public function show($ref)
+    public function show(Project $project)
     {
-        $project = Project::with(['details', 'phases.milestoneCheckpoints'])
-            ->where('ref', $ref)
-            ->firstOrFail();
+        $project->load(['details', 'phases.milestoneCheckpoints']);
 
         return view('projects.show', compact('project'));
+    }
+
+    /**
+     * Update specified project in database.
+     */
+    public function update(Request $request, Project $project)
+    {
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'ref' => 'required|string|max:255|unique:projects,ref,' . $project->id,
+            'status' => 'nullable|string|max:255',
+        ]);
+
+        $project->update([
+            'name' => $validated['name'],
+            'ref' => $validated['ref'],
+        ]);
+
+        if ($project->details && isset($validated['status'])) {
+            $project->details->update([
+                'status' => $validated['status'],
+            ]);
+        }
+
+        return redirect()->back()->with('success', "Project '{$project->name}' updated successfully!");
+    }
+
+    /**
+     * Remove the specified project from database.
+     */
+    public function destroy(Project $project)
+    {
+        $name = $project->name;
+        $project->delete();
+
+        return redirect()->route('projects.index')->with('success', "Project '{$name}' deleted successfully!");
     }
 }

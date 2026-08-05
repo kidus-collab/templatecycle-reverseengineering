@@ -25,6 +25,14 @@ class Project extends Model
         'tags' => 'array',
     ];
 
+    /**
+     * Get the route key for the model.
+     */
+    public function getRouteKeyName(): string
+    {
+        return 'ref';
+    }
+
     public function projectTemplate(): BelongsTo
     {
         return $this->belongsTo(ProjectTemplate::class);

@@ -1,5 +1,56 @@
 <x-app-layout title="Project Portfolio - Project Cycle">
 
+    @php
+        $createFields = [
+            [
+                'name' => 'name',
+                'label' => 'Project Name',
+                'type' => 'text',
+                'placeholder' => 'e.g., Skyline Tower',
+                'required' => true,
+            ],
+            [
+                'name' => 'ref',
+                'label' => 'Reference Code',
+                'type' => 'text',
+                'placeholder' => 'e.g., MC26-L-G2-ST1',
+                'required' => true,
+            ],
+            [
+                'name' => 'project_template_id',
+                'label' => 'Initial Stage Template',
+                'type' => 'select',
+                'options' => array_replace(['' => '-- No Template (Custom) --'], $templates->pluck('name', 'id')->toArray()),
+            ],
+        ];
+
+        $editFields = [
+            [
+                'name' => 'name',
+                'label' => 'Project Name',
+                'type' => 'text',
+                'required' => true,
+            ],
+            [
+                'name' => 'ref',
+                'label' => 'Reference Code',
+                'type' => 'text',
+                'required' => true,
+            ],
+            [
+                'name' => 'status',
+                'label' => 'Project Status',
+                'type' => 'select',
+                'options' => [
+                    'Upcoming' => 'Upcoming',
+                    'In Progress' => 'In Progress',
+                    'Completed' => 'Completed',
+                    'On Hold' => 'On Hold',
+                ],
+            ],
+        ];
+    @endphp
+
     <div class="space-y-4" x-data="projectsPortfolio()">
         
         <!-- Portfolio Header with Add Project Button Top Right -->
@@ -36,39 +87,93 @@
             </div>
         </div>
 
-        <!-- Add Project Modal -->
-        <dialog id="add_project_modal" class="modal">
-            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 max-w-sm">
-                <h3 class="font-bold text-base text-gray-900">Add New Project</h3>
-                <p class="py-1 text-[11px] text-gray-500">Create a new project to track in your portfolio.</p>
+        <!-- Add Project Dynamic Modal Component -->
+        <x-form-modal
+            id="add_project_modal"
+            title="Add New Project"
+            description="Create a new project to track in your portfolio."
+            :action="route('projects.store')"
+            method="POST"
+            :fields="$createFields"
+            submitText="Save Project"
+            submitClass="bg-amber-200 hover:bg-amber-300 text-amber-950 border-amber-300"
+            maxWidth="max-w-sm"
+        />
 
-                <form method="POST" action="{{ route('projects.store') }}">
-                    @csrf
-                    <div class="space-y-2.5 mt-2">
-                        <div class="form-control w-full">
-                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Project Name</span></label>
-                            <input type="text" name="name" required placeholder="e.g., Skyline Tower" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs" />
-                        </div>
-                        <div class="form-control w-full">
-                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Reference Code</span></label>
-                            <input type="text" name="ref" required placeholder="e.g., MC26-L-G2-ST1" class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs font-mono" />
-                        </div>
-                        <div class="form-control w-full">
-                            <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Initial Stage Template</span></label>
-                            <select name="project_template_id" class="select select-sm select-bordered w-full rounded-lg focus:border-amber-400 text-xs">
-                                <option value="">-- No Template (Custom) --</option>
-                                @foreach($templates as $template)
-                                    <option value="{{ $template->id }}">{{ $template->name }}</option>
-                                @endforeach
-                            </select>
-                        </div>
+        <!-- Edit Project Dynamic Modal Component -->
+        <dialog id="edit_project_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 shadow-xl max-w-sm">
+                <div class="flex items-start justify-between">
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900">Edit Project</h3>
+                        <p class="py-0.5 text-[11px] text-gray-500">Update project details and status.</p>
                     </div>
-                    <div class="modal-action mt-4 flex gap-2 justify-end">
-                        <button type="button" onclick="document.getElementById('add_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
-                        <button type="submit" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case">Save Project</button>
+                    <button type="button" onclick="document.getElementById('edit_project_modal').close()" class="btn btn-ghost btn-xs btn-circle text-gray-400">✕</button>
+                </div>
+
+                <form method="POST" :action="'/projects/' + editProject.currentRef" class="mt-3 space-y-3">
+                    @csrf
+                    @method('PUT')
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Project Name *</span></label>
+                        <input type="text" name="name" x-model="editProject.name" required class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs" />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Reference Code *</span></label>
+                        <input type="text" name="ref" x-model="editProject.ref" required class="input input-sm input-bordered w-full rounded-lg focus:border-amber-400 text-xs font-mono" />
+                    </div>
+
+                    <div class="form-control w-full">
+                        <label class="label py-0.5"><span class="label-text font-medium text-[11px] text-gray-700">Project Status</span></label>
+                        <select name="status" x-model="editProject.status" class="select select-sm select-bordered w-full rounded-lg focus:border-amber-400 text-xs bg-white">
+                            <option value="Upcoming">Upcoming</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                            <option value="On Hold">On Hold</option>
+                        </select>
+                    </div>
+
+                    <div class="modal-action mt-4 flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                        <button type="button" onclick="document.getElementById('edit_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn btn-xs rounded-lg normal-case font-semibold bg-amber-200 hover:bg-amber-300 text-amber-950 border-amber-300">Update Project</button>
                     </div>
                 </form>
             </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
+        </dialog>
+
+        <!-- Delete Project Confirmation Modal Popup -->
+        <dialog id="delete_project_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-4 shadow-xl max-w-sm">
+                <div class="flex items-center gap-3 text-rose-600 mb-2">
+                    <div class="p-2 bg-rose-50 rounded-full border border-rose-100">
+                        <i data-lucide="alert-triangle" class="w-5 h-5"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-base text-gray-900">Delete Project</h3>
+                        <p class="text-[11px] text-gray-500">Are you sure you want to proceed?</p>
+                    </div>
+                </div>
+
+                <div class="p-2.5 bg-rose-50/60 rounded-lg border border-rose-100/80 my-3">
+                    <p class="text-xs text-rose-900">
+                        You are about to permanently delete <strong class="font-semibold text-rose-950" x-text="deleteProject.name"></strong> (<span class="font-mono text-xs" x-text="deleteProject.ref"></span>).
+                    </p>
+                    <p class="text-[10px] text-rose-700/80 mt-1">This will remove all associated phases and milestone checkpoints. This action cannot be undone.</p>
+                </div>
+
+                <form method="POST" :action="'/projects/' + deleteProject.ref">
+                    @csrf
+                    @method('DELETE')
+                    <div class="modal-action flex items-center justify-end gap-2 border-t border-gray-100 pt-3">
+                        <button type="button" onclick="document.getElementById('delete_project_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
+                        <button type="submit" class="btn bg-rose-600 hover:bg-rose-700 text-white btn-xs rounded-lg normal-case border-rose-600">Yes, Delete Project</button>
+                    </div>
+                </form>
+            </div>
+            <form method="dialog" class="modal-backdrop"><button>close</button></form>
         </dialog>
 
     </div>
@@ -76,17 +181,29 @@
     <script>
         function projectsPortfolio() {
             return {
-                newProject: { name: '', ref: '' },
+                editProject: { currentRef: '', ref: '', name: '', status: 'Upcoming' },
+                deleteProject: { ref: '', name: '' },
 
                 openAddProjectModal() {
-                    this.newProject = { name: '', ref: '' };
                     document.getElementById('add_project_modal').showModal();
                 },
 
-                addProject() {
-                    if (!this.newProject.name.trim()) return;
-                    document.getElementById('add_project_modal').close();
-                    this.$root.showNotification(`Project '${this.newProject.name}' added successfully!`);
+                openEditModal(project) {
+                    this.editProject = {
+                        currentRef: project.ref,
+                        ref: project.ref,
+                        name: project.name,
+                        status: project.status || 'Upcoming'
+                    };
+                    document.getElementById('edit_project_modal').showModal();
+                },
+
+                openDeleteModal(project) {
+                    this.deleteProject = {
+                        ref: project.ref,
+                        name: project.name
+                    };
+                    document.getElementById('delete_project_modal').showModal();
                 }
             }
         }
