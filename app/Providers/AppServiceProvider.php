@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use App\Repositories\ProjectRepository;
+use App\Repositories\ProjectRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -17,6 +19,7 @@ class AppServiceProvider extends ServiceProvider
     {
         //
         $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
+        $this->app->bind(TemplateRepositoryInterface::class, TemplateRepository::class);
     }
 
     /**

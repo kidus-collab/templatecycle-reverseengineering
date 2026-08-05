@@ -13,5 +13,10 @@ class TemplateRepository {
 
      /** 
       *  Nested query  , Optimized report for specific store 
-      */
+      */ 
+  public function getAllTemplates() { 
+      //   $templates = ProjectTemplate::with(['tracks.milestones'])->get();
+      //   $templates = ProjectTemplate::all();
+  }
+
 }
