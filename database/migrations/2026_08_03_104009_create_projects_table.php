@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('projects', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('project_template_id')->nullable()->constrained('project_templates')->nullOnDelete();
             $table->string('ref')->unique();
             $table->string('name');
             //json 

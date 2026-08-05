@@ -35,7 +35,7 @@
                 class="{{ request()->routeIs('templates') ? 'bg-amber-100/80 text-amber-950 font-semibold border-amber-300' : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900 border-transparent' }} w-full flex items-center justify-between px-3 py-2 rounded-lg border text-xs transition-all duration-150 text-left group">
                 <div class="flex items-center gap-2 min-w-0">
                     <i data-lucide="folder-kanban" class="w-3.5 h-3.5 shrink-0 {{ request()->routeIs('templates') ? 'text-amber-800' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
-                    <span class="truncate">Projects</span>
+                    <span class="truncate">Templates</span>
                 </div>
                 <span class="{{ request()->routeIs('templates') ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-100 text-gray-500' }} text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">6</span>
             </a>

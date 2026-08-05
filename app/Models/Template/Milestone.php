@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Milestone extends Model
 {
     protected $fillable = [
+        'parent_id',
         'title',
     ]; 
     

@@ -10,6 +10,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class MilestoneCheckpoint extends Model
 {
     protected $fillable = [
+        'project_phase_id',
+        'track_id',
+        'parent_id',
         'title', 
         'done', 
     ];

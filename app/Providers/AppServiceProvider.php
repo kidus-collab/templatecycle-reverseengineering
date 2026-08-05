@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
-use App\Repositories\ProjectRepository;
-use App\Repositories\ProjectRepositoryInterface;
+use App\Repositories\Project\ProjectRepository;
+use App\Repositories\Project\ProjectRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -29,7 +30,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->configureDefaults();
         
-        \Illuminate\Support\Facades\Blade::component('layouts.app', 'app-layout');
+        Blade::component('layouts.app', 'app-layout');
     }
 
     /**

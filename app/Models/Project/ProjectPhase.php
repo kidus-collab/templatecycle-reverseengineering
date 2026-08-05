@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProjectPhase extends Model
 {
     protected $fillable = [
+        'project_detail_id',
         'name',
         'status',
         'progress',

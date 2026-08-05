@@ -58,7 +58,7 @@
                         'name' => $project->name, 
                         'status' => $project->details->status ?? 'Upcoming'
                     ]) }})"
-                    class="btn btn-xs btn-ghost btn-square text-gray-400 hover:text-amber-900 hover:bg-amber-100/80 rounded-lg transition-colors"
+                    class="p-1.5 text-gray-400 hover:text-amber-900 hover:bg-amber-100 rounded-lg transition-colors flex items-center justify-center"
                     title="Edit project">
                     <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
                 </button>
@@ -68,7 +68,7 @@
                         'ref' => $project->ref, 
                         'name' => $project->name
                     ]) }})"
-                    class="btn btn-xs btn-ghost btn-square text-gray-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                    class="p-1.5 text-gray-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center"
                     title="Delete project">
                     <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
                 </button>

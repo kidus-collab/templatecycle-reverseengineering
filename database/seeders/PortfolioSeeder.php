@@ -93,7 +93,6 @@ class PortfolioSeeder extends Seeder
 
         foreach ($projectsData as $pData) {
             $project = Project::create([
-                'project_template_id' => $template->id,
                 'ref' => $pData['ref'],
                 'name' => $pData['name'],
                 'tags' => $pData['tags'],
@@ -103,7 +102,6 @@ class PortfolioSeeder extends Seeder
             $detail = ProjectDetail::create([
                 'project_id' => $project->id,
                 'applied_track' => $pData['tags'][0],
-                'progress_percent' => $pData['progressPercent'],
                 'status' => $pData['status'],
             ]);
 

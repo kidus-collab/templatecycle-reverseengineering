@@ -4,7 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
-use App\Repositories\ProjectRepositoryInterface;
+use App\Repositories\Project\ProjectRepositoryInterface;
+use App\Repositories\Project\ProjectRepository;
 use App\Http\Requests\ProjectRequest;   
 use App\Services\ProjectService;
 use App\Models\Template\ProjectTemplate;
@@ -12,10 +13,16 @@ use App\Models\Project\Project;
 
 class ProjectController extends Controller
 {
+    private ProjectRepositoryInterface $projectRepository;
+    private ProjectService $projectService;
+
     public function __construct(
-        private ProjectRepositoryInterface $projectRepository,
-        private ProjectService $projectService
-    ) {}
+        ProjectRepositoryInterface $projectRepository,
+        ProjectService $projectService
+    ) {
+        $this->projectRepository = $projectRepository;
+        $this->projectService = $projectService;
+    }
 
     /**
      * Display projects portfolio gallery view.
@@ -23,7 +30,7 @@ class ProjectController extends Controller
     public function index()
     {
         $projects = $this->projectRepository->getAllProjectsWithDetails();
-        $templates = $this->templateRepository->getAllTemplates();
+        $templates = ProjectTemplate::all();
 
         return view('projects.index', compact('projects', 'templates'));
     }
@@ -49,7 +56,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $project = $this->projectRepository->loadProjectRelations($project);
+        $project = $this->projectRepository->loadProjectMilestones($project);
 
         return view('projects.show', compact('project'));
     }
@@ -61,7 +68,7 @@ class ProjectController extends Controller
     {
         $validated = $request->validated();
         
-        $this->projectRepository->updateProjectRecord($project, $validated);
+        $this->projectRepository->updateProjectDetail($project, $validated);
 
         return redirect()->back()->with('success', "Project '{$project->name}' updated successfully!");
     }

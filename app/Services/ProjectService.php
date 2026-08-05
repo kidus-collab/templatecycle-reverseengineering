@@ -5,7 +5,7 @@ namespace App\Services;
 
 use App\Models\Project\Project;
 use App\Models\Template\ProjectTemplate;
-use App\Repositories\ProjectRepositoryInterface;
+use App\Repositories\Project\ProjectRepositoryInterface;
 
 class ProjectService
 {
@@ -21,17 +21,15 @@ class ProjectService
         $tag = $template ? ($template->tracks->first()?->name ?? 'Construction Track') : 'Construction Track';
 
         // 1. Tell the repository to create the project
-        $project = $this->projectRepo->createProjectRecord([
+        $project = $this->projectRepo->createProject([
             'ref' => $data['ref'],
             'name' => $data['name'],
             'tags' => [$tag],
-            'project_template_id' => $template?->id,
         ]);
 
         // 2. Tell the repository to create the details
-        $detail = $this->projectRepo->createDetailRecord([
+        $detail = $this->projectRepo->createProjectDetail([
             'applied_track' => $tag,
-            'progress_percent' => 0,
             'status' => 'Upcoming',
         ], $project->id);
 

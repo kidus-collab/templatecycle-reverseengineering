@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Track extends Model
 {
     protected $fillable = [
+        'project_template_id',
         'name',
         'phase_name',
     ];

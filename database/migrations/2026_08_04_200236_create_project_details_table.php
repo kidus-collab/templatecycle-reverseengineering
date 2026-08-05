@@ -14,9 +14,8 @@ return new class extends Migration
         Schema::create('project_details', function (Blueprint $table) {
             $table->id();
             $table->foreignId('project_id')->constrained()->cascadeOnDelete();
-            $table->string('applied_track')->nullable();
-            $table->decimal('progress_percent', 5, 2)->default(0);
-            $table->string('status')->nullable();
+            $table->string('applied_track');
+            $table->string('status')->default('Upcoming');
             $table->timestamps();
         });
     }

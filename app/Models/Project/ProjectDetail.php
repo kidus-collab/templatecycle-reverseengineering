@@ -11,14 +11,13 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class ProjectDetail extends Model
 {
     protected $fillable = [
+        'project_id',
         'applied_track',
-        'progress_percent',
         'status',
     ];
 
     protected $casts = [
         'applied_track' => 'string',
-        'progress_percent' => 'float',
         'status' => 'string',
     ];
 
