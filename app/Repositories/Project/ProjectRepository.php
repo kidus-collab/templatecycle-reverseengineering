@@ -13,6 +13,11 @@ use Illuminate\Support\Arr;
 
 class ProjectRepository implements ProjectRepositoryInterface
 {
+    public function findById(int $id): Project
+    {
+        return Project::with('details')->findOrFail($id);
+    }
+
     public function getAllProjectsWithDetails(): Collection
     {
         return Project::with(['details', 'phases'])->get();

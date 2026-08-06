@@ -7,11 +7,14 @@ use App\Models\Template\ProjectTemplate;
 use App\Models\Template\Track;
 use App\Models\Template\Milestone;
 use App\Repositories\Templates\ProjectTemplateRepositoryInterface;
+use App\Repositories\Project\ProjectRepositoryInterface;
+use App\Models\Project\Project;
 
 class ProjectTemplateService
 {
     public function __construct(
-        private ProjectTemplateRepositoryInterface $repository
+        private ProjectTemplateRepositoryInterface $repository,
+        private ProjectRepositoryInterface $projectRepository
     ) {}
 
     public function createTemplate(array $data): ProjectTemplate
@@ -22,6 +25,32 @@ class ProjectTemplateService
         $data['is_active'] = true;
 
         return $this->repository->createTemplate($data);
+    }
+
+    public function applyTemplateToProject(ProjectTemplate $template, int $projectId): void
+    {
+        $project = $this->projectRepository->findById($projectId);
+
+        $template->load('tracks.milestones');
+
+        if ($project->details) {
+            foreach ($template->tracks as $track) {
+                $phase = $this->projectRepository->createProjectPhase([
+                    'name' => $track->name,
+                    'status' => 'Upcoming',
+                    'progress' => 0,
+                    'milestones_count' => $track->milestones->count(),
+                    'sub_milestones_count' => 0,
+                ], $project->details->id);
+
+                foreach ($track->milestones as $milestone) {
+                    $this->projectRepository->createMilestoneCheckpoint([
+                        'title' => $milestone->title,
+                        'done' => false,
+                    ], $phase->id, $track->id);
+                }
+            }
+        }
     }
 
     public function syncTemplate(ProjectTemplate $template, array $tracksData): void

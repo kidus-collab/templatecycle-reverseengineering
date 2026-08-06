@@ -5,9 +5,11 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectTemplateRequest;
 use App\Models\Template\ProjectTemplate;
 use App\Models\Template\Track;
+use App\Models\Project\ProjectPhase;
 use App\Models\Template\Milestone;
 use App\Repositories\Templates\ProjectTemplateRepositoryInterface;
 use App\Services\ProjectTemplateService;
+use App\Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ProjectTemplateController extends Controller
@@ -20,17 +22,17 @@ class ProjectTemplateController extends Controller
     public function index()
     {
         $templates = $this->repository->getAllTemplates();
-        $projects = \App\Models\Project\Project::all();
+        $projects = Project::all();
         return view('templates.index', compact('templates', 'projects'));
     }
 
-    public function apply(\Illuminate\Http\Request $request, ProjectTemplate $template)
+    public function apply(Request $request, ProjectTemplate $template)
     {
         $validated = $request->validate([
             'project_id' => 'required|exists:projects,id',
         ]);
 
-        $project = \App\Models\Project\Project::with('details')->findOrFail($validated['project_id']);
+        $project = Project::with('details')->findOrFail($validated['project_id']);
         
         // Update project template link
         $project->project_template_id = $template->id;
@@ -41,7 +43,7 @@ class ProjectTemplateController extends Controller
         // Copy template tracks & milestones into project phases & checkpoints
         if ($project->details) {
             foreach ($template->tracks as $track) {
-                $phase = new \App\Models\Project\ProjectPhase([
+                $phase = new ProjectPhase([
                     'name' => $track->name,
                     'status' => 'Upcoming',
                     'progress' => 0,
@@ -74,7 +76,7 @@ class ProjectTemplateController extends Controller
         return response()->json(['success' => true, 'template' => $template]);
     }
 
-    public function sync(\Illuminate\Http\Request $request, ProjectTemplate $template): JsonResponse
+    public function sync(Request $request, ProjectTemplate $template): JsonResponse
     {
         $validated = $request->validate([
             'tracks' => 'array|nullable',

@@ -34,6 +34,22 @@ class ProjectTemplateRequest extends FormRequest
             $rules['parent_id'] = 'nullable|exists:milestones,id';
         }
 
+        // Apply rules
+        if ($this->routeIs('templates.apply')) {
+            $rules['project_id'] = 'required|exists:projects,id';
+        }
+
+        // Sync rules
+        if ($this->routeIs('templates.sync')) {
+            $rules['tracks'] = 'array|nullable';
+            $rules['tracks.*.id'] = 'nullable';
+            $rules['tracks.*.name'] = 'required|string';
+            $rules['tracks.*.milestones'] = 'array|nullable';
+            $rules['tracks.*.milestones.*.id'] = 'nullable';
+            $rules['tracks.*.milestones.*.title'] = 'required|string';
+            $rules['tracks.*.milestones.*.parent_id'] = 'nullable';
+        }
+
         return $rules;
     }
 }

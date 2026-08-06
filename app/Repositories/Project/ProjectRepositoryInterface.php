@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Collection;
 
 interface ProjectRepositoryInterface
 {
+    public function findById(int $id): Project;
     public function getAllProjectsWithDetails(): Collection;
     public function createProject(array $data): Project;
     public function createProjectDetail(array $data, int $projectId): ProjectDetail;

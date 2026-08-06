@@ -126,7 +126,14 @@
                                         </button>
 
                                         <!-- Dropdown Menu -->
-                                        <div x-show="managingTracks" x-transition class="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4">
+                                        <div x-show="managingTracks" 
+                                             x-transition:enter="transition ease-out duration-300 origin-top"
+                                             x-transition:enter-start="opacity-0 -translate-y-2 scale-y-90"
+                                             x-transition:enter-end="opacity-100 translate-y-0 scale-y-100"
+                                             x-transition:leave="transition ease-in duration-200 origin-top"
+                                             x-transition:leave-start="opacity-100 translate-y-0 scale-y-100"
+                                             x-transition:leave-end="opacity-0 -translate-y-2 scale-y-90"
+                                             class="absolute left-0 top-full mt-2 w-72 bg-white rounded-xl shadow-xl border border-gray-200 z-50 p-4">
                                             <div class="text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-3">DELIVERY TRACKS</div>
                                             <div class="flex flex-wrap gap-2 mb-3">
                                                 <button @click="addPredefinedTrack('Design Permit')" class="px-2.5 py-1.5 rounded-md bg-amber-50 border border-amber-100 text-amber-900 text-[11px] font-medium hover:bg-amber-100">Design Permit</button>
@@ -170,13 +177,15 @@
                                     <!-- Phases List -->
                                     <div class="space-y-4">
                                         <template x-for="phase in getPhases(activeTrack)" :key="phase.id">
-                                            <div class="border border-gray-200/90 rounded-xl overflow-hidden shadow-xs bg-white">
+                                            <div x-data="{ expanded: true }" class="border border-gray-200/90 rounded-xl overflow-hidden shadow-xs bg-white">
                                                 
                                                 <!-- Phase Header -->
                                                 <div class="flex justify-between items-center bg-gray-50/30 p-3 border-b border-gray-100">
                                                     <div class="flex items-center gap-2">
                                                         <i data-lucide="grip-vertical" class="w-4 h-4 text-gray-300 cursor-move"></i>
-                                                        <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400"></i>
+                                                        <button @click="expanded = !expanded" class="p-0.5 hover:bg-gray-200 rounded transition-colors">
+                                                            <i data-lucide="chevron-down" class="w-4 h-4 text-gray-500 transition-transform duration-300 ease-in-out" :class="expanded ? '' : '-rotate-90'"></i>
+                                                        </button>
                                                         <h3 x-show="editingMilestoneId !== phase.id" @click="editMilestone(phase)" class="font-bold text-sm text-gray-900 cursor-text" x-text="phase.title"></h3>
                                                         <input x-show="editingMilestoneId === phase.id" x-model="phase.title" @click.away="saveMilestone(phase)" @keyup.enter="saveMilestone(phase)" class="input input-xs border-gray-300 focus:border-amber-400 focus:outline-none focus:ring-0 rounded font-bold text-sm h-6 bg-white" :id="'ms-input-'+phase.id">
                                                     </div>
@@ -186,7 +195,8 @@
                                                 </div>
 
                                                 <!-- Phase Body (Milestones) -->
-                                                <div class="p-4 space-y-4">
+                                                <div x-show="expanded" x-collapse.duration.300ms>
+                                                    <div class="p-4 space-y-4">
                                                     <div class="flex justify-between items-center">
                                                         <span class="text-[9px] font-bold tracking-widest text-gray-500 uppercase">MILESTONES</span>
                                                         <button @click="addChildMilestone(phase.id)" class="text-[10px] font-bold text-gray-500 hover:text-amber-700 flex items-center gap-1 transition-colors uppercase tracking-wider">
@@ -448,7 +458,11 @@
                     };
                     if (body) options.body = JSON.stringify(body);
                     const res = await fetch(url, options);
-                    if (!res.ok) throw new Error('API request failed');
+                    if (!res.ok) {
+                        const errorData = await res.text();
+                        console.error('API Error Response:', errorData);
+                        throw new Error('API request failed');
+                    }
                     return res.json();
                 },
 
