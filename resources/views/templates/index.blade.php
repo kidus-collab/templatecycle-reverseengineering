@@ -33,7 +33,7 @@
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 items-start mt-4">
 
             <!-- LEFT COLUMN: Templates List -->
-            <aside class="lg:col-span-3 bg-white/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200/80 shadow-xs space-y-3">
+            <aside class="lg:col-span-3 bg-white/70 backdrop-blur-sm p-4 rounded-xl border border-gray-200/80 shadow-xs space-y-3 relative z-50">
                 <div>
                     <span class="text-[9px] font-bold tracking-widest text-gray-400 uppercase">TEMPLATES</span>
                     <h2 class="text-sm font-semibold text-gray-900 mt-0.5">Choose a stage template to edit</h2>
@@ -251,6 +251,34 @@
             </main>
         </div>
 
+        <!-- Sticky Footer for Batch Save -->
+        <div x-show="activeTemplate" class="sticky bottom-0 -mx-3 md:-mx-6 -mb-3 md:-mb-6 mt-6 bg-white border-t border-gray-200/90 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.05)] z-40 px-6 py-3 flex items-center justify-between transition-opacity duration-300">
+            
+            <div class="flex items-center gap-3">
+                <span class="text-sm font-bold text-gray-800" x-text="activeTemplate ? activeTemplate.name : ''"></span>
+                <div x-show="hasUnsavedChanges" class="flex items-center gap-1.5" x-transition>
+                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span>
+                    <span class="text-[11px] font-medium text-amber-600">Unsaved changes</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <a href="{{ route('projects.index') }}" class="text-[11px] font-semibold text-gray-600 hover:text-gray-900 transition-colors">
+                    Back to project register
+                </a>
+                <button 
+                    @click="syncToServer()" 
+                    :disabled="!hasUnsavedChanges || isSaving"
+                    :class="(!hasUnsavedChanges || isSaving) ? 'opacity-50 cursor-not-allowed bg-gray-200 text-gray-500 border-gray-200' : 'bg-amber-400 hover:bg-amber-500 text-amber-950 border-amber-500 shadow-sm'"
+                    class="btn btn-sm rounded-lg border px-5 text-xs font-bold transition-all normal-case flex items-center gap-1.5">
+                    <template x-if="isSaving">
+                        <i data-lucide="loader-2" class="w-3.5 h-3.5 animate-spin"></i>
+                    </template>
+                    <span x-text="isSaving ? 'Saving...' : 'Save'"></span>
+                </button>
+            </div>
+        </div>
+
         <!-- Modals -->
         <dialog id="create_template_modal" class="modal">
             <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
@@ -293,6 +321,31 @@
                 </form>
             </div>
         </dialog>
+        <!-- Custom Confirm Modal -->
+        <dialog id="custom_confirm_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
+                <h3 class="font-bold text-base text-gray-900" x-text="confirmConfig.title"></h3>
+                <p class="py-2 text-[12px] text-gray-500" x-text="confirmConfig.message"></p>
+                <div class="modal-action mt-4 flex justify-end gap-2">
+                    <button type="button" @click="document.getElementById('custom_confirm_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case text-gray-600">Cancel</button>
+                    <button type="button" @click="confirmConfig.onConfirm()" class="btn bg-red-50 hover:bg-red-100 text-red-600 border-red-200 btn-xs rounded-lg normal-case shadow-none px-4">Yes, proceed</button>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Custom Alert Modal -->
+        <dialog id="custom_alert_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
+                <h3 class="font-bold text-base text-red-600 flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span x-text="alertConfig.title"></span>
+                </h3>
+                <p class="py-2 text-[12px] text-gray-600" x-text="alertConfig.message"></p>
+                <div class="modal-action mt-2">
+                    <button type="button" @click="document.getElementById('custom_alert_modal').close()" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 btn-xs rounded-lg normal-case shadow-none px-4">OK</button>
+                </div>
+            </div>
+        </dialog>
 
     </div>
 
@@ -309,6 +362,12 @@
                 editingMilestoneId: null,
                 
                 newTemplateName: '',
+                hasUnsavedChanges: false,
+                isSaving: false,
+                tempIdCounter: 1,
+
+                confirmConfig: { title: '', message: '', onConfirm: null },
+                alertConfig: { title: '', message: '' },
 
                 init() {
                     if(this.templates && this.templates.length > 0) {
@@ -318,12 +377,26 @@
                         }
                     }
                     this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
-                    
-                    // Automatically re-render icons if Alpine JS adds new elements
-                    const observer = new MutationObserver((mutations) => {
-                        if (window.lucide) window.lucide.createIcons();
-                    });
-                    observer.observe(document.body, { childList: true, subtree: true });
+                },
+
+                showConfirm(title, message, callback) {
+                    this.confirmConfig.title = title;
+                    this.confirmConfig.message = message;
+                    this.confirmConfig.onConfirm = () => {
+                        document.getElementById('custom_confirm_modal').close();
+                        if (callback) callback();
+                    };
+                    document.getElementById('custom_confirm_modal').showModal();
+                },
+
+                showAlert(title, message) {
+                    this.alertConfig.title = title;
+                    this.alertConfig.message = message;
+                    document.getElementById('custom_alert_modal').showModal();
+                },
+
+                generateTempId() {
+                    return 'temp-' + (this.tempIdCounter++);
                 },
 
                 get activeTrack() {
@@ -342,6 +415,19 @@
                 },
                 
                 selectTemplate(template) {
+                    if (this.hasUnsavedChanges) {
+                        this.showConfirm(
+                            'Unsaved Changes', 
+                            'Are you sure you want to switch templates? Your unsaved changes will be lost.',
+                            () => this.performTemplateSwitch(template)
+                        );
+                        return;
+                    }
+                    this.performTemplateSwitch(template);
+                },
+
+                performTemplateSwitch(template) {
+                    this.hasUnsavedChanges = false;
                     this.activeTemplate = template;
                     if (template.tracks && template.tracks.length > 0) {
                         this.activeTrackId = template.tracks[0].id;
@@ -351,7 +437,6 @@
                     this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 },
 
-                // API Wrappers
                 async apiCall(url, method, body = null) {
                     const options = {
                         method,
@@ -367,7 +452,6 @@
                     return res.json();
                 },
 
-                // Actions
                 openCreateModal() {
                     this.newTemplateName = '';
                     document.getElementById('create_template_modal').showModal();
@@ -381,7 +465,7 @@
                         document.getElementById('create_template_modal').close();
                     } catch (e) {
                         console.error(e);
-                        alert("Failed to create template.");
+                        this.showAlert("Error", "Failed to create template.");
                     }
                 },
 
@@ -390,17 +474,15 @@
                     document.getElementById('apply_template_modal').showModal();
                 },
 
-                async addPredefinedTrack(name) {
+                addPredefinedTrack(name) {
                     this.managingTracks = false;
-                    try {
-                        const res = await this.apiCall(`/templates/${this.activeTemplate.id}/tracks`, 'POST', { name });
-                        if(!this.activeTemplate.tracks) this.activeTemplate.tracks = [];
-                        res.track.milestones = [];
-                        this.activeTemplate.tracks.push(res.track);
-                        this.activeTemplate.tracks_count = (this.activeTemplate.tracks_count || 0) + 1;
-                        this.activeTrackId = res.track.id;
-                        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
-                    } catch (e) { console.error(e); }
+                    const newTrack = { id: this.generateTempId(), name: name, milestones: [] };
+                    if(!this.activeTemplate.tracks) this.activeTemplate.tracks = [];
+                    this.activeTemplate.tracks.push(newTrack);
+                    this.activeTemplate.tracks_count = (this.activeTemplate.tracks_count || 0) + 1;
+                    this.activeTrackId = newTrack.id;
+                    this.hasUnsavedChanges = true;
+                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 },
 
                 addCustomTrack() {
@@ -415,35 +497,30 @@
                     });
                 },
 
-                async saveTrack(track) {
+                saveTrack(track) {
                     this.editingTrackId = null;
                     if(!track.name.trim()) return;
-                    try {
-                        await this.apiCall(`/tracks/${track.id}`, 'PUT', { name: track.name });
-                    } catch (e) { console.error(e); }
+                    this.hasUnsavedChanges = true;
                 },
 
-                async addPhase() {
-                    try {
-                        const res = await this.apiCall(`/tracks/${this.activeTrack.id}/milestones`, 'POST', { title: 'New Phase', parent_id: null });
-                        if(!this.activeTrack.milestones) this.activeTrack.milestones = [];
-                        this.activeTrack.milestones.push(res.milestone);
-                        this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
-                        this.editMilestone(res.milestone);
-                        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
-                    } catch (e) { console.error(e); }
+                addPhase() {
+                    const newPhase = { id: this.generateTempId(), title: 'New Phase', parent_id: null };
+                    if(!this.activeTrack.milestones) this.activeTrack.milestones = [];
+                    this.activeTrack.milestones.push(newPhase);
+                    this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
+                    this.hasUnsavedChanges = true;
+                    this.editMilestone(newPhase);
+                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 },
 
-                async addChildMilestone(parentId) {
-                    try {
-                        const res = await this.apiCall(`/tracks/${this.activeTrack.id}/milestones`, 'POST', { title: 'New Milestone', parent_id: parentId });
-                        if(!this.activeTrack.milestones) this.activeTrack.milestones = [];
-                        this.activeTrack.milestones.push(res.milestone);
-                        // Just an estimation update for the UI without reloading everything
-                        this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
-                        this.editMilestone(res.milestone);
-                        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
-                    } catch (e) { console.error(e); }
+                addChildMilestone(parentId) {
+                    const newChild = { id: this.generateTempId(), title: 'New Milestone', parent_id: parentId };
+                    if(!this.activeTrack.milestones) this.activeTrack.milestones = [];
+                    this.activeTrack.milestones.push(newChild);
+                    this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
+                    this.hasUnsavedChanges = true;
+                    this.editMilestone(newChild);
+                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                 },
 
                 editMilestone(ms) {
@@ -454,21 +531,59 @@
                     });
                 },
 
-                async saveMilestone(ms) {
+                saveMilestone(ms) {
                     this.editingMilestoneId = null;
                     if(!ms.title.trim()) return; 
-                    try {
-                        await this.apiCall(`/milestones/${ms.id}`, 'PUT', { title: ms.title });
-                    } catch (e) { console.error(e); }
+                    this.hasUnsavedChanges = true;
                 },
 
-                async deleteMilestone(ms) {
-                    if(!confirm('Are you sure you want to delete this?')) return;
+                deleteMilestone(ms) {
+                    this.showConfirm(
+                        'Delete Milestone',
+                        'Are you sure you want to delete this?',
+                        () => {
+                            try {
+                                this.activeTrack.milestones = this.activeTrack.milestones.filter(m => m.id !== ms.id && m.parent_id !== ms.id);
+                                this.activeTemplate.milestones_count = Math.max(0, (this.activeTemplate.milestones_count || 1) - 1);
+                                this.hasUnsavedChanges = true;
+                            } catch (e) { console.error(e); }
+                        }
+                    );
+                },
+
+                async syncToServer() {
+                    if (!this.activeTemplate || !this.hasUnsavedChanges) return;
+                    this.isSaving = true;
                     try {
-                        await this.apiCall(`/milestones/${ms.id}`, 'DELETE');
-                        this.activeTrack.milestones = this.activeTrack.milestones.filter(m => m.id !== ms.id && m.parent_id !== ms.id);
-                        this.activeTemplate.milestones_count = Math.max(0, (this.activeTemplate.milestones_count || 1) - 1);
-                    } catch (e) { console.error(e); }
+                        const payload = { tracks: this.activeTemplate.tracks || [] };
+                        const res = await this.apiCall(`/templates/${this.activeTemplate.id}/sync`, 'PUT', payload);
+                        
+                        // Update local template with DB version (to get real IDs)
+                        const index = this.templates.findIndex(t => t.id === res.template.id);
+                        if (index !== -1) {
+                            this.templates[index] = res.template;
+                        }
+                        this.activeTemplate = res.template;
+                        
+                        // Try to keep the active track selected if it still exists
+                        if (this.activeTrackId && this.activeTemplate.tracks) {
+                            const stillExists = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId || t.name === this.activeTrack.name);
+                            if (stillExists) {
+                                this.activeTrackId = stillExists.id;
+                            } else {
+                                this.activeTrackId = this.activeTemplate.tracks.length > 0 ? this.activeTemplate.tracks[0].id : null;
+                            }
+                        }
+                        
+                        this.hasUnsavedChanges = false;
+                        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                        
+                    } catch(e) {
+                        console.error(e);
+                        this.showAlert("Error", "Failed to save changes.");
+                    } finally {
+                        this.isSaving = false;
+                    }
                 }
             }
         }
