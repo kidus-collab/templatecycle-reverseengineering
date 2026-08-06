@@ -10,6 +10,8 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Track extends Model
 {
+    protected $touches = ['projectTemplate'];
+
     protected $fillable = [
         'project_template_id',
         'name',

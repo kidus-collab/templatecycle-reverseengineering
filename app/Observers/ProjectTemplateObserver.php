@@ -28,19 +28,4 @@ class ProjectTemplateObserver
         Cache::tags(['templates'])->forget('templates.all');
     }
     
- // Invalidate cache on changes to track 
-    public function updatedTrack()
-    {
-        Cache::tags(['templates'])->flush();
-    }
-
-    public function deletedTrack()
-    {
-        Cache::tags(['templates'])->flush();
-    }
-
-    public function createdTrack()
-    {
-        Cache::tags(['templates'])->flush();
-    }
-    }
+}

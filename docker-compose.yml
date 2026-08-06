@@ -6,21 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "8000:80"
+      - "8000:8000"
+      - "5173:5173" # We expose Vite's port directly on this container now
     volumes:
-      - .:/var/www/html # Mounts your local code into the container
-    depends_on:
-      - mysql
-
-  mysql:
-    image: mysql:8.0
-    environment:
-      MYSQL_DATABASE: 'laravel'
-      MYSQL_ROOT_PASSWORD: 'password'
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-
-volumes:
-  db_data:
+      - .:/app
+    # Runs Laravel's server
+    command: composer run dev --host=0.0.0.0 --port=8000

@@ -7,9 +7,8 @@ use \Illuminate\Http\Request;
 use App\Repositories\Project\ProjectRepositoryInterface;
 use App\Repositories\Project\ProjectRepository;
 
-use App\Http\Requests\ProjectRequest;   
-
-use App\Services\ProjectService;
+use App\Http\Requests\ProjectRequest;
+use App\Services\Projects\ProjectCreationService as ProjectService;
 
 use App\Models\Template\ProjectTemplate;
 use App\Models\Project\Project;
