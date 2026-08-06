@@ -5,9 +5,15 @@ declare(strict_types=1);
 namespace App\Models\Template;
 
 use App\Models\Project\Project;
+use App\Observers\ProjectTemplateObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+
+// Clear Cache observer
+#[ObservedBy([ProjectTemplateObserver::class])]
+
 
 class ProjectTemplate extends Model
 {

@@ -13,9 +13,14 @@ class ProjectTemplateRepository implements ProjectTemplateRepositoryInterface
 
 // Load all project templates along with their associated tracks and milestones.
     public function getAllTemplates(): Collection
-    {
+    { 
+
+     cache::tags(['templates'])->remember('templates.all', now()->addHours(24), function () {
+     
         return ProjectTemplate::with(['tracks.milestones.subMilestones'])->get();
-    }
+     });
+
+        }
 
     public function getTemplateById(int $id): ProjectTemplate
     {
@@ -48,6 +53,8 @@ class ProjectTemplateRepository implements ProjectTemplateRepositoryInterface
 
     public function updateTrack(Track $track, array $data): bool
     {
+
+    Cache::tags(['templates'])->flush(); // Invalidate cache on changes
         return $track->update($data);
     }
 
