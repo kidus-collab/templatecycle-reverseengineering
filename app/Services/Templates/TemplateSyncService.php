@@ -59,29 +59,21 @@ class TemplateSyncService
         $incomingMilestoneIds = [];
         $tempIdMap = [];
 
-        // First pass: Process top-level milestones (Phases)
         foreach ($milestonesData as $msData) {
-            if (empty($msData['parent_id'])) {
-                $this->processMilestone($track, $msData, null, $incomingMilestoneIds, $tempIdMap);
-            }
-        }
-
-        // Second pass: Process sub-milestones
-        foreach ($milestonesData as $msData) {
-            if (!empty($msData['parent_id'])) {
-                $parentId = $msData['parent_id'];
-                // Resolve temp parent ID if it was just created
+            // Process parent phase
+            $this->processMilestone($track, $msData, null, $incomingMilestoneIds, $tempIdMap);
+            
+            // Process nested sub_milestones if they exist in the payload
+            if (!empty($msData['sub_milestones'])) {
+                // Get the parent ID. If it was temporary, we must resolve it.
+                $parentId = $msData['id'] ?? null;
                 if (is_string($parentId) && isset($tempIdMap[$parentId])) {
                     $parentId = $tempIdMap[$parentId];
                 }
                 
-                // If the parent ID is still a string starting with temp- (and not mapped)
-                // then something went wrong (parent not saved), skip it.
-                if (is_string($parentId) && str_starts_with($parentId, 'temp-')) {
-                    continue;
+                foreach ($msData['sub_milestones'] as $subData) {
+                    $this->processMilestone($track, $subData, $parentId, $incomingMilestoneIds, $tempIdMap);
                 }
-
-                $this->processMilestone($track, $msData, $parentId, $incomingMilestoneIds, $tempIdMap);
             }
         }
 

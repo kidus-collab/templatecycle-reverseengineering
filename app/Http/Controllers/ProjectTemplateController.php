@@ -8,7 +8,8 @@ use App\Models\Template\Track;
 use App\Models\Project\ProjectPhase;
 use App\Models\Template\Milestone;
 use App\Repositories\Templates\ProjectTemplateRepositoryInterface;
-use App\Services\ProjectTemplateService;
+use App\Services\Templates\TemplateManagementService;
+use App\Services\Templates\TemplateSyncService;
 use App\Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
@@ -16,7 +17,8 @@ class ProjectTemplateController extends Controller
 {
     public function __construct(
         private ProjectTemplateRepositoryInterface $repository,
-        private ProjectTemplateService $service
+        private TemplateManagementService $managementService,
+        private TemplateSyncService $syncService
     ) {}
 
     public function index()
@@ -70,7 +72,7 @@ class ProjectTemplateController extends Controller
 
     public function store(ProjectTemplateRequest $request): JsonResponse
     {
-        $template = $this->service->createTemplate($request->validated());
+        $template = $this->managementService->createTemplate($request->validated());
         $template = $this->repository->getTemplateById($template->id);
         
         return response()->json(['success' => true, 'template' => $template]);
@@ -88,7 +90,7 @@ class ProjectTemplateController extends Controller
             'tracks.*.milestones.*.parent_id' => 'nullable',
         ]);
 
-        $this->service->syncTemplate($template, $validated['tracks'] ?? []);
+        $this->syncService->syncTemplate($template, $validated['tracks'] ?? []);
         
         // Reload and return the updated template
         $template = $this->repository->getTemplateById($template->id);
@@ -97,7 +99,7 @@ class ProjectTemplateController extends Controller
 
     public function storeTrack(ProjectTemplateRequest $request, ProjectTemplate $template): JsonResponse
     {
-        $track = $this->service->addTrack($template, $request->validated());
+        $track = $this->managementService->addTrack($template, $request->validated());
         $track->load('milestones.subMilestones');
         return response()->json(['success' => true, 'track' => $track]);
     }
@@ -110,13 +112,13 @@ class ProjectTemplateController extends Controller
 
     public function destroyTrack(Track $track): JsonResponse
     {
-        $this->service->deleteTrack($track);
+        $this->managementService->deleteTrack($track);
         return response()->json(['success' => true]);
     }
 
     public function storeMilestone(ProjectTemplateRequest $request, Track $track): JsonResponse
     {
-        $milestone = $this->service->addMilestone($track, $request->validated());
+        $milestone = $this->managementService->addMilestone($track, $request->validated());
         $milestone->load('subMilestones');
         return response()->json(['success' => true, 'milestone' => $milestone]);
     }
@@ -129,7 +131,7 @@ class ProjectTemplateController extends Controller
 
     public function destroyMilestone(Milestone $milestone): JsonResponse
     {
-        $this->service->deleteMilestone($milestone);
+        $this->managementService->deleteMilestone($milestone);
         return response()->json(['success' => true]);
     }
 }

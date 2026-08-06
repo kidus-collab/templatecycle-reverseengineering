@@ -48,6 +48,11 @@ class ProjectTemplateRequest extends FormRequest
             $rules['tracks.*.milestones.*.id'] = 'nullable';
             $rules['tracks.*.milestones.*.title'] = 'required|string';
             $rules['tracks.*.milestones.*.parent_id'] = 'nullable';
+            // Allow sub_milestones explicitly so they don't get stripped from the payload
+            $rules['tracks.*.milestones.*.sub_milestones'] = 'array|nullable';
+            $rules['tracks.*.milestones.*.sub_milestones.*.id'] = 'nullable';
+            $rules['tracks.*.milestones.*.sub_milestones.*.title'] = 'required|string';
+            $rules['tracks.*.milestones.*.sub_milestones.*.parent_id'] = 'nullable';
         }
 
         return $rules;
