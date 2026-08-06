@@ -5,12 +5,13 @@ namespace App\Http\Controllers;
 use App\Http\Requests\ProjectTemplateRequest;
 use App\Models\Template\ProjectTemplate;
 use App\Models\Template\Track;
+use App\Models\Project\Project;
 use App\Models\Project\ProjectPhase;
 use App\Models\Template\Milestone;
 use App\Repositories\Templates\ProjectTemplateRepositoryInterface;
 use App\Services\Templates\TemplateManagementService;
 use App\Services\Templates\TemplateSyncService;
-use App\Illuminate\Http\Request;
+use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 
 class ProjectTemplateController extends Controller
