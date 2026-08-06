@@ -59,8 +59,8 @@
                     <p class="text-[11px] text-gray-500">Phases and milestone checkpoints derived from the active template stage track.</p>
                 </div>
 
-                <button @click="$root.showNotification('Milestone checklist saved!')" class="btn btn-xs bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg font-semibold normal-case">
-                    Save Progress
+                <button @click="saveProgress" :disabled="isSaving" class="btn btn-xs bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg font-semibold normal-case">
+                    <span x-text="isSaving ? 'Saving...' : 'Save Progress'"></span>
                 </button>
             </div>
 
@@ -139,6 +139,7 @@
     <script>
         function projectDetail() {
             return {
+                isSaving: false,
                 phases: @json($project->phases).map(p => ({ 
                     ...p, 
                     expanded: p.status === 'In Progress',
@@ -155,7 +156,52 @@
                     if (phase.progress === 100) phase.status = 'Completed';
                     else if (phase.progress > 0) phase.status = 'In Progress';
                     else phase.status = 'Upcoming';
-                    this.$root.showNotification(`Updated checkpoint progress for ${phase.name}.`);
+                    
+                    // Auto-save progress to the backend immediately when a checkbox is toggled
+                    this.saveProgress();
+                },
+                
+                async saveProgress() {
+                    if (this.isSaving) return;
+                    this.isSaving = true;
+                    
+                    try {
+                        const payload = this.phases.map(p => ({
+                            id: p.id,
+                            status: p.status,
+                            progress: p.progress,
+                            checkpoints: p.checkpoints.map(c => ({
+                                id: c.id,
+                                done: Boolean(c.done)
+                            }))
+                        }));
+
+                        const response = await fetch(`{{ route('projects.progress.update', $project->id) }}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Content-Type': 'application/json',
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                            },
+                            body: JSON.stringify({ phases: payload })
+                        });
+
+                        if (response.ok) {
+                            if (this.$root && typeof this.$root.showNotification === 'function') {
+                                this.$root.showNotification('Milestone checklist saved!');
+                            } else {
+                                console.log('Progress saved successfully!');
+                            }
+                        } else {
+                            const errData = await response.json();
+                            console.error('Validation errors:', errData);
+                            alert('Failed to save progress. Check console for details.');
+                        }
+                    } catch (error) {
+                        console.error(error);
+                        alert('Error saving progress.');
+                    } finally {
+                        this.isSaving = false;
+                    }
                 }
             }
         }

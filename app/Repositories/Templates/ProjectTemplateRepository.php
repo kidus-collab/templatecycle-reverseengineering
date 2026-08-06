@@ -1,22 +1,75 @@
-<?php 
+<?php
+declare(strict_types=1);
 
-declare(strict_types=1); 
+namespace App\Repositories\Templates;
+
+use App\Models\Template\ProjectTemplate;
+use App\Models\Template\Track;
+use App\Models\Template\Milestone;
+use Illuminate\Database\Eloquent\Collection;
+
+class ProjectTemplateRepository implements ProjectTemplateRepositoryInterface
+{
+
+// Load all project templates along with their associated tracks and milestones.
+    public function getAllTemplates(): Collection
+    {
+        return ProjectTemplate::with(['tracks.milestones.subMilestones'])->get();
+    }
+
+    public function getTemplateById(int $id): ProjectTemplate
+    {
+        return ProjectTemplate::with(['tracks.milestones.subMilestones'])->findOrFail($id);
+    }
 
 
-namespace App\Repositories; 
+  // Template Crud operations
+    public function createTemplate(array $data): ProjectTemplate
+    {
+        return ProjectTemplate::create($data);
+    }
 
+    public function updateTemplate(ProjectTemplate $template, array $data): bool
+    {
+        return $template->update($data);
+    }
 
-use App\Models\Template; 
+    public function deleteTemplate(ProjectTemplate $template): bool
+    {
+        return $template->delete();
+    }
 
+    // Tracks Crud operations
 
-class TemplateRepository { 
+    public function createTrack(ProjectTemplate $template, array $data): Track
+    {
+        return $template->tracks()->create($data);
+    }
 
-     /** 
-      *  Nested query  , Optimized report for specific store 
-      */ 
-  public function getAllTemplates() { 
-      //   $templates = ProjectTemplate::with(['tracks.milestones'])->get();
-      //   $templates = ProjectTemplate::all();
-  }
+    public function updateTrack(Track $track, array $data): bool
+    {
+        return $track->update($data);
+    }
 
+    public function deleteTrack(Track $track): bool
+    {
+        return $track->delete();
+    }
+
+ // Milestones Crud operations
+
+    public function createMilestone(Track $track, array $data): Milestone
+    {
+        return $track->milestones()->create($data);
+    }
+
+    public function updateMilestone(Milestone $milestone, array $data): bool
+    {
+        return $milestone->update($data);
+    }
+
+    public function deleteMilestone(Milestone $milestone): bool
+    {
+        return $milestone->delete();
+    }
 }

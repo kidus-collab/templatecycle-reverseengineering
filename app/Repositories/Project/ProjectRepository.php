@@ -46,7 +46,7 @@ class ProjectRepository implements ProjectRepositoryInterface
 
       
 // get a project by its ID along with its details, phases, and milestone checkpoints.
-    public function loadProjectMilestones(Project $project): Project
+    public function getProjectById(Project $project): Project
     {
         return $project->load(['details', 'phases.milestoneCheckpoints']);
     }
@@ -67,5 +67,41 @@ class ProjectRepository implements ProjectRepositoryInterface
     public function deleteProject(Project $project): void
     {
         $project->delete();
+    }
+
+    public function syncProjectProgress(Project $project, array $phasesData): void
+    {
+        foreach ($phasesData as $phaseData) {
+            ProjectPhase::where('id', $phaseData['id'])->update([
+                'status' => $phaseData['status'],
+                'progress' => $phaseData['progress'],
+            ]);
+
+            if (!empty($phaseData['checkpoints'])) {
+                foreach ($phaseData['checkpoints'] as $checkpointData) {
+                    MilestoneCheckpoint::where('id', $checkpointData['id'])->update([
+                        'done' => $checkpointData['done'],
+                    ]);
+                }
+            }
+        }
+        
+        // Also update overall project progress
+        $phases = ProjectPhase::where('project_detail_id', $project->details->id)->get();
+        if ($phases->count() > 0) {
+            $totalProgress = $phases->sum('progress') / $phases->count();
+            
+            $overallStatus = 'Upcoming';
+            if ($totalProgress == 100) {
+                $overallStatus = 'Completed';
+            } elseif ($totalProgress > 0) {
+                $overallStatus = 'In Progress';
+            }
+            
+            $project->details->update([
+                'progress_percent' => round($totalProgress),
+                'status' => $overallStatus
+            ]);
+        }
     }
 }

@@ -3,11 +3,14 @@
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
-
+use \Illuminate\Http\Request;
 use App\Repositories\Project\ProjectRepositoryInterface;
 use App\Repositories\Project\ProjectRepository;
+
 use App\Http\Requests\ProjectRequest;   
+
 use App\Services\ProjectService;
+
 use App\Models\Template\ProjectTemplate;
 use App\Models\Project\Project;
 
@@ -29,7 +32,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects = $this->projectRepository->getAllProjectsWithDetails();
+        $projects =  $this->projectRepository->getAllProjectsWithDetails();
         $templates = ProjectTemplate::all();
 
         return view('projects.index', compact('projects', 'templates'));
@@ -56,7 +59,7 @@ class ProjectController extends Controller
      */
     public function show(Project $project)
     {
-        $project = $this->projectRepository->loadProjectMilestones($project);
+        $project = $this->projectRepository->getProjectById($project);
 
         return view('projects.show', compact('project'));
     }
@@ -71,6 +74,18 @@ class ProjectController extends Controller
         $this->projectRepository->updateProjectDetail($project, $validated);
 
         return redirect()->back()->with('success', "Project '{$project->name}' updated successfully!");
+    }
+
+    /**
+     * Update project progress and checkpoints.
+     */
+    public function updateProgress(ProjectRequest $request, Project $project)
+    {
+        $data = $request->validated();
+
+        $this->projectRepository->syncProjectProgress($project, $data['phases']);
+
+        return response()->json(['success' => true]);
     }
 
     /**

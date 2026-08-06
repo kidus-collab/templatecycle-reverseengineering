@@ -25,6 +25,18 @@ class ProjectRequest extends FormRequest
         // Rules for Both Create & Update
         $rules = [ 'name' => 'required|string|max:255'];
 
+        // Check if this is the progress update route
+        if ($this->routeIs('projects.progress.update')) {
+            return [
+                'phases' => 'required|array',
+                'phases.*.id' => 'required|exists:project_phases,id',
+                'phases.*.status' => 'required|string',
+                'phases.*.progress' => 'required|numeric',
+                'phases.*.checkpoints' => 'array',
+                'phases.*.checkpoints.*.id' => 'required|exists:milestone_checkpoints,id',
+                'phases.*.checkpoints.*.done' => 'required|boolean',
+            ];
+        }
         // 2. Rules for CREATE 
         if ($this->isMethod('POST')) {
             $rules['name'] = 'required|string|max:255|unique:projects,name';

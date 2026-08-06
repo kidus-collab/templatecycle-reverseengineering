@@ -191,9 +191,10 @@
                 init() {
                     // Check if there are validation errors to reopen the add modal
                     @if ($errors->any())
-                        // We check if it's a POST request which means it was an add request.
-                        // Since we can't easily know the exact modal, we'll open add modal if it's not a PUT/DELETE request
-                        @if (request()->isMethod('POST'))
+                        // Laravel redirects back on validation error with a GET request.
+                        // Standard POST forms don't have a '_method' field, so if old('_method') is empty, it was an add project request.
+                        // If old('_method') is PUT/DELETE, it was an edit/delete request.
+                        @if (!old('_method') || old('_method') === 'POST')
                             this.$nextTick(() => {
                                 this.openAddProjectModal();
                             });

@@ -4,6 +4,8 @@ namespace App\Providers;
 
 use App\Repositories\Project\ProjectRepository;
 use App\Repositories\Project\ProjectRepositoryInterface;
+use App\Repositories\Templates\ProjectTemplateRepository;
+use App\Repositories\Templates\ProjectTemplateRepositoryInterface;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +20,8 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
-        $this->app->bind(ProjectRepositoryInterface::class, ProjectRepository::class);
-        $this->app->bind(ProjectTemplateRepositoryInterface::class, ProjectTemplateRepository::class);
+        $this->app->bind( ProjectRepositoryInterface::class, ProjectRepository::class );
+        $this->app->bind( ProjectTemplateRepositoryInterface::class, ProjectTemplateRepository::class );
     }
 
     /**
