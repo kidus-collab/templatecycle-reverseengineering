@@ -29,44 +29,17 @@ class ProjectTemplateController extends Controller
         return view('templates.index', compact('templates', 'projects'));
     }
 
-    public function apply(Request $request, ProjectTemplate $template)
+    public function apply(ProjectTemplateRequest $request, ProjectTemplate $template, \App\Services\Projects\ProjectCreationService $projectCreationService)
     {
-        $validated = $request->validate([
-            'project_id' => 'required|exists:projects,id',
-        ]);
-
-        $project = Project::with('details')->findOrFail($validated['project_id']);
+        $validated = $request->validated();
+        $project = Project::findOrFail($validated['project_id']);
         
         // Update project template link
         $project->project_template_id = $template->id;
         $project->save();
 
-        $template->load('tracks.milestones');
-
-        // Copy template tracks & milestones into project phases & checkpoints
-        if ($project->details) {
-            foreach ($template->tracks as $track) {
-                $phase = new ProjectPhase([
-                    'name' => $track->name,
-                    'status' => 'Upcoming',
-                    'progress' => 0,
-                    'milestones_count' => $track->milestones->count(),
-                    'sub_milestones_count' => 0,
-                ]);
-                $phase->project_detail_id = $project->details->id;
-                $phase->save();
-
-                foreach ($track->milestones as $milestone) {
-                    $checkpoint = new \App\Models\Project\MilestoneCheckpoint([
-                        'title' => $milestone->title,
-                        'done' => false,
-                    ]);
-                    $checkpoint->project_phase_id = $phase->id;
-                    $checkpoint->track_id = $track->id;
-                    $checkpoint->save();
-                }
-            }
-        }
+        // Delegate to the specialized service
+        $projectCreationService->applyTemplateToProject($template, $project->id);
 
         return redirect()->route('templates')->with('success', "Template '{$template->name}' applied to project '{$project->name}' successfully!");
     }
@@ -91,29 +64,15 @@ class ProjectTemplateController extends Controller
         return response()->json(['success' => true]);
     }
 
-    public function sync(Request $request, ProjectTemplate $template): JsonResponse
+    public function sync(ProjectTemplateRequest $request, ProjectTemplate $template): JsonResponse
     {
-        try {
-            $validated = $request->validate([
-                'tracks' => 'array|nullable',
-                'tracks.*.id' => 'nullable',
-                'tracks.*.name' => 'required|string',
-                'tracks.*.milestones' => 'array|nullable',
-                'tracks.*.milestones.*.id' => 'nullable',
-                'tracks.*.milestones.*.title' => 'required|string',
-                'tracks.*.milestones.*.parent_id' => 'nullable',
-            ]);
+        $validated = $request->validated();
 
-            $this->syncService->syncTemplate($template, $validated['tracks'] ?? []);
-            
-            // Reload and return the updated template
-            $template = $this->repository->getTemplateById($template->id);
-            return response()->json(['success' => true, 'template' => $template]);
-        } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('SYNC ERROR: ' . $e->getMessage());
-            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
-            throw $e;
-        }
+        $this->syncService->syncTemplate($template, $validated['tracks'] ?? []);
+        
+        // Reload and return the updated template
+        $template = $this->repository->getTemplateById($template->id);
+        return response()->json(['success' => true, 'template' => $template]);
     }
 
     public function storeTrack(ProjectTemplateRequest $request, ProjectTemplate $template): JsonResponse
