@@ -12,8 +12,8 @@
                 </div>
                 <div class="flex items-center gap-2">
                     <h1 class="text-xl md:text-2xl font-bold text-gray-900 tracking-tight">{{ $project->name }}</h1>
-                    <span class="bg-amber-100 text-amber-900 text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-200" title="Applied Track">
-                        1 Track: {{ $project->details->applied_track ?? 'Construction Track' }}
+                    <span class="bg-amber-100 text-amber-900 text-[10px] font-medium px-2 py-0.5 rounded-full border border-amber-200" title="Applied Template">
+                        Template: {{ $project->projectTemplate->name ?? ($project->details->applied_track ?? 'No Template') }}
                     </span>
                 </div>
             </div>
@@ -47,8 +47,8 @@
             <!-- Sub-milestones Counter Card -->
             <x-metric-card label="SUB-MILESTONES COMPLETE" :value="$project->phases->sum('progress') > 0 ? $project->phases->sum('sub_milestones_count') . '/723' : '0/723'" subtext="Detailed stage checks" />
 
-            <!-- Applied Track Card -->
-            <x-metric-card label="APPLIED TEMPLATE TRACK" :value="$project->details->applied_track ?? 'Construction Track'" subtext="Single track limit enforced" />
+            <!-- Applied Template Card -->
+            <x-metric-card label="APPLIED TEMPLATE" :value="$project->projectTemplate->name ?? ($project->details->applied_track ?? 'No Template')" subtext="Structured delivery framework" />
         </div>
 
         <!-- TEMPLATE PROGRESS MILESTONES SECTION -->
@@ -176,29 +176,26 @@
                             }))
                         }));
 
-                        const response = await fetch(`{{ route('projects.progress.update', $project->id) }}`, {
+                        const res = await fetch(`/projects/{{ $project->ref }}/progress`, {
                             method: 'PUT',
                             headers: {
                                 'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                                'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                'Accept': 'application/json'
                             },
                             body: JSON.stringify({ phases: payload })
                         });
-
-                        if (response.ok) {
-                            if (this.$root && typeof this.$root.showNotification === 'function') {
-                                this.$root.showNotification('Milestone checklist saved!');
-                            } else {
-                                console.log('Progress saved successfully!');
-                            }
-                        } else {
-                            const errData = await response.json();
-                            console.error('Validation errors:', errData);
-                            alert('Failed to save progress. Check console for details.');
+                        
+                        if (!res.ok) {
+                            throw new Error('Failed to save progress');
                         }
-                    } catch (error) {
-                        console.error(error);
+                        
+                        // Reload to update overall metrics
+                        window.location.reload();
+                        
+                    } catch (err) {
                         alert('Error saving progress.');
+                        console.error(err);
                     } finally {
                         this.isSaving = false;
                     }

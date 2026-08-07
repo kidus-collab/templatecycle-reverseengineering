@@ -18,14 +18,20 @@ class ProjectCreationService
      */
     public function createProjectWithTemplate(array $data, ?ProjectTemplate $template): Project
     {
-        $tag = $template ? ($template->tracks->first()?->name ?? 'Construction Track') : 'Construction Track';
+        $tag = $template ? $template->name : 'No Template';
 
         // 1. Tell the repository to create the project
-        $project = $this->projectRepo->createProject([
+        $projectData = [
             'ref' => $data['ref'],
             'name' => $data['name'],
             'tags' => [$tag],
-        ]);
+        ];
+
+        if ($template) {
+            $projectData['project_template_id'] = $template->id;
+        }
+
+        $project = $this->projectRepo->createProject($projectData);
 
         // 2. Tell the repository to create the details
         $detail = $this->projectRepo->createProjectDetail([
@@ -35,24 +41,50 @@ class ProjectCreationService
 
         // 3. Tell the repository to copy templates
         if ($template) {
+            $template->load('tracks.milestones');
+            
             foreach ($template->tracks as $track) {
-                $phase = $this->projectRepo->createProjectPhase([
-                    'name' => $track->name,
-                    'status' => 'Upcoming',
-                    'progress' => 0,
-                    'milestones_count' => $track->milestones->count(),
-                    'sub_milestones_count' => 0,
-                ], $detail->id);
+                // Get only root milestones (Phases)
+                $templatePhases = $track->milestones->whereNull('parent_id');
+                
+                foreach ($templatePhases as $templatePhase) {
+                    // Find milestones under this phase
+                    $templateMilestones = $track->milestones->where('parent_id', $templatePhase->id);
+                    $milestonesCount = $templateMilestones->count();
+                    
+                    // Find sub-milestones under those milestones
+                    $templateMilestoneIds = $templateMilestones->pluck('id')->toArray();
+                    $templateSubMilestones = $track->milestones->whereIn('parent_id', $templateMilestoneIds);
+                    $subMilestonesCount = $templateSubMilestones->count();
+                    
+                    $projectPhase = $this->projectRepo->createProjectPhase([
+                        'name' => $templatePhase->title,
+                        'status' => 'Upcoming',
+                        'progress' => 0,
+                        'milestones_count' => $milestonesCount,
+                        'sub_milestones_count' => $subMilestonesCount,
+                    ], $detail->id);
 
-                foreach ($track->milestones as $milestone) {
-                    $this->projectRepo->createMilestoneCheckpoint([
-                        'title' => $milestone->title,
-                        'done' => false,
-                    ], $phase->id, $track->id);
+                    foreach ($templateMilestones as $templateMilestone) {
+                        $checkpoint = $this->projectRepo->createMilestoneCheckpoint([
+                            'title' => $templateMilestone->title,
+                            'parent_id' => null,
+                            'done' => false,
+                        ], $projectPhase->id, $track->id);
+                        
+                        $subs = $templateSubMilestones->where('parent_id', $templateMilestone->id);
+                        foreach ($subs as $sub) {
+                            $this->projectRepo->createMilestoneCheckpoint([
+                                'title' => $sub->title,
+                                'parent_id' => $checkpoint->id,
+                                'done' => false,
+                            ], $projectPhase->id, $track->id);
+                        }
+                    }
                 }
             }
         }
-
+        
         return $project;
     }
 
@@ -64,19 +96,43 @@ class ProjectCreationService
 
         if ($project->details) {
             foreach ($template->tracks as $track) {
-                $phase = $this->projectRepo->createProjectPhase([
-                    'name' => $track->name,
-                    'status' => 'Upcoming',
-                    'progress' => 0,
-                    'milestones_count' => $track->milestones->count(),
-                    'sub_milestones_count' => 0,
-                ], $project->details->id);
+                // Get only root milestones (Phases)
+                $templatePhases = $track->milestones->whereNull('parent_id');
+                
+                foreach ($templatePhases as $templatePhase) {
+                    // Find milestones under this phase
+                    $templateMilestones = $track->milestones->where('parent_id', $templatePhase->id);
+                    $milestonesCount = $templateMilestones->count();
+                    
+                    // Find sub-milestones under those milestones
+                    $templateMilestoneIds = $templateMilestones->pluck('id')->toArray();
+                    $templateSubMilestones = $track->milestones->whereIn('parent_id', $templateMilestoneIds);
+                    $subMilestonesCount = $templateSubMilestones->count();
+                    
+                    $projectPhase = $this->projectRepo->createProjectPhase([
+                        'name' => $templatePhase->title,
+                        'status' => 'Upcoming',
+                        'progress' => 0,
+                        'milestones_count' => $milestonesCount,
+                        'sub_milestones_count' => $subMilestonesCount,
+                    ], $project->details->id);
 
-                foreach ($track->milestones as $milestone) {
-                    $this->projectRepo->createMilestoneCheckpoint([
-                        'title' => $milestone->title,
-                        'done' => false,
-                    ], $phase->id, $track->id);
+                    foreach ($templateMilestones as $templateMilestone) {
+                        $checkpoint = $this->projectRepo->createMilestoneCheckpoint([
+                            'title' => $templateMilestone->title,
+                            'parent_id' => null,
+                            'done' => false,
+                        ], $projectPhase->id, $track->id);
+                        
+                        $subs = $templateSubMilestones->where('parent_id', $templateMilestone->id);
+                        foreach ($subs as $sub) {
+                            $this->projectRepo->createMilestoneCheckpoint([
+                                'title' => $sub->title,
+                                'parent_id' => $checkpoint->id,
+                                'done' => false,
+                            ], $projectPhase->id, $track->id);
+                        }
+                    }
                 }
             }
         }

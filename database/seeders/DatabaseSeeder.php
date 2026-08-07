@@ -26,6 +26,7 @@ class DatabaseSeeder extends Seeder
          */
 
           $this->call([
+            UltimateTemplateSeeder::class,
             ProjectTemplateSeeder::class,
             PortfolioSeeder::class, 
         ]);

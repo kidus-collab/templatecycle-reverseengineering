@@ -14,14 +14,13 @@ class ProjectTemplateRepository implements ProjectTemplateRepositoryInterface
 // Load all project templates along with their associated tracks and milestones.
     public function getAllTemplates(): Collection
     { 
-        /**
-         * @deprecated Caching heavily nested Eloquent collections is currently causing serialization errors.
-         * return \Illuminate\Support\Facades\Cache::remember('templates.all', now()->addHours(24), function () {
-         *     return ProjectTemplate::with(['tracks.milestones.subMilestones'])->get();
-         * });
-         */
+
+    // cache::tags(['templates'])->remember('templates.all', now()->addHours(24), function () { });
+     
         return ProjectTemplate::with(['tracks.milestones.subMilestones'])->get();
-    }
+    
+
+        }
 
     public function getTemplateById(int $id): ProjectTemplate
     {
@@ -54,8 +53,8 @@ class ProjectTemplateRepository implements ProjectTemplateRepositoryInterface
 
     public function updateTrack(Track $track, array $data): bool
     {
-        // @deprecated Cache has been disabled for templates to prevent serialization errors
-        // \Illuminate\Support\Facades\Cache::forget('templates.all'); // Invalidate cache on changes
+
+   
         return $track->update($data);
     }
 

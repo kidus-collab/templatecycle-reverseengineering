@@ -79,6 +79,18 @@ class ProjectTemplateController extends Controller
         return response()->json(['success' => true, 'template' => $template]);
     }
 
+    public function update(ProjectTemplateRequest $request, ProjectTemplate $template): JsonResponse
+    {
+        $template->update($request->validated());
+        return response()->json(['success' => true, 'template' => $template]);
+    }
+
+    public function destroy(ProjectTemplate $template): JsonResponse
+    {
+        $template->delete();
+        return response()->json(['success' => true]);
+    }
+
     public function sync(Request $request, ProjectTemplate $template): JsonResponse
     {
         try {

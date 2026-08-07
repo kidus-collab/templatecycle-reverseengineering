@@ -15,7 +15,7 @@ use App\Models\Project\Project;
 
 class ProjectController extends Controller
 {
-    private ProjectRepositoryInterface $projectRepository;
+   private ProjectRepositoryInterface $projectRepository;
     private ProjectService $projectService;
 
     public function __construct(

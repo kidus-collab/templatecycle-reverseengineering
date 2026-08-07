@@ -66,14 +66,24 @@
 
                             <p class="text-[11px] text-gray-500 mt-0.5 line-clamp-2 leading-relaxed" x-text="template.description"></p>
 
-                            <div class="mt-2 text-[10px] font-medium text-gray-500 flex items-center gap-1 font-mono">
-                                <span x-text="template.tracks_count + 'T'"></span>
-                                <span>·</span>
-                                <span x-text="(template.tracks ? template.tracks.reduce((acc, t) => acc + (t.milestones ? t.milestones.filter(m=>!m.parent_id).length : 0), 0) : 0) + 'P'"></span>
-                                <span>·</span>
-                                <span x-text="template.milestones_count + 'M'"></span>
-                                <span>·</span>
-                                <span x-text="template.sub_milestones_count + 'SM'"></span>
+                            <div class="mt-2 flex items-center justify-between">
+                                <div class="text-[10px] font-medium text-gray-500 flex items-center gap-1 font-mono">
+                                    <span x-text="template.tracks_count + 'T'"></span>
+                                    <span>·</span>
+                                    <span x-text="(template.tracks ? template.tracks.reduce((acc, t) => acc + (t.milestones ? t.milestones.filter(m=>!m.parent_id).length : 0), 0) : 0) + 'P'"></span>
+                                    <span>·</span>
+                                    <span x-text="template.milestones_count + 'M'"></span>
+                                    <span>·</span>
+                                    <span x-text="template.sub_milestones_count + 'SM'"></span>
+                                </div>
+                                <div class="flex items-center gap-0.5">
+                                    <button @click.stop="openEditTemplateModal(template)" class="p-1 text-gray-400 hover:text-amber-700 hover:bg-amber-50 rounded-lg transition-colors flex items-center justify-center" title="Edit Template">
+                                        <i data-lucide="pencil" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                    <button @click.stop="deleteTemplate(template)" class="p-1 text-gray-400 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors flex items-center justify-center" title="Delete Template">
+                                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </template>
@@ -101,7 +111,7 @@
                                 <div class="space-y-1">
                                     <template x-for="track in activeTemplate.tracks" :key="track.id">
                                         <button 
-                                            @click="activeTrackId = track.id"
+                                            @click="activeTrackId = track.id; refreshIcons()"
                                             :class="{
                                                 'bg-amber-50/50 border-amber-300 shadow-2xs': activeTrackId === track.id,
                                                 'bg-white border-transparent text-gray-700 hover:bg-gray-50': activeTrackId !== track.id
@@ -273,8 +283,9 @@
             </div>
 
             <div class="flex items-center gap-4">
-                <a href="{{ route('projects.index') }}" class="text-[11px] font-semibold text-gray-600 hover:text-gray-900 transition-colors">
-                    Back to project register
+                <a href="{{ route('projects.index') }}" class="btn bg-white hover:bg-gray-50 text-gray-700 border-gray-300 font-medium btn-xs rounded-lg normal-case shadow-xs">
+                    <i data-lucide="arrow-left" class="w-3.5 h-3.5 mr-1"></i>
+                    Back to projects
                 </a>
                 <button 
                     @click="syncToServer()" 
@@ -292,7 +303,7 @@
         <!-- Modals -->
         <dialog id="create_template_modal" class="modal">
             <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
-                <h3 class="font-bold text-base text-gray-900">Create New Stage Template</h3>
+                <h3 class="font-bold text-base text-gray-900" x-text="editingTemplateId ? 'Edit Template' : 'Create New Stage Template'"></h3>
                 <p class="py-1 text-[11px] text-gray-500">Set up a new reusable delivery template.</p>
                 <div class="form-control w-full mt-3">
                     <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Template Name</span></label>
@@ -300,7 +311,7 @@
                 </div>
                 <div class="modal-action mt-5 flex justify-end gap-2">
                     <button type="button" @click="document.getElementById('create_template_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
-                    <button type="button" @click="submitCreateTemplate()" :disabled="!newTemplateName" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case shadow-none">Create Template</button>
+                    <button type="button" @click="submitCreateTemplate()" :disabled="!newTemplateName" class="btn bg-amber-200 hover:bg-amber-300 text-amber-900 border-amber-300 btn-xs rounded-lg normal-case shadow-none" x-text="editingTemplateId ? 'Save Changes' : 'Create Template'"></button>
                 </div>
             </div>
         </dialog>
@@ -371,6 +382,7 @@
                 editingTrackId: null,
                 editingMilestoneId: null,
                 
+                editingTemplateId: null,
                 newTemplateName: '',
                 hasUnsavedChanges: false,
                 isSaving: false,
@@ -386,7 +398,7 @@
                             this.activeTrackId = this.activeTemplate.tracks[0].id;
                         }
                     }
-                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                    this.refreshIcons();
                 },
 
                 showConfirm(title, message, callback) {
@@ -407,6 +419,15 @@
 
                 generateTempId() {
                     return 'temp-' + (this.tempIdCounter++);
+                },
+
+                refreshIcons() {
+                    this.$nextTick(() => {
+                        if (window.lucide) window.lucide.createIcons();
+                        setTimeout(() => {
+                            if (window.lucide) window.lucide.createIcons();
+                        }, 50);
+                    });
                 },
 
                 get activeTrack() {
@@ -444,7 +465,7 @@
                     } else {
                         this.activeTrackId = null;
                     }
-                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                    this.refreshIcons();
                 },
 
                 async apiCall(url, method, body = null) {
@@ -470,19 +491,58 @@
 
                 openCreateModal() {
                     this.newTemplateName = '';
+                    this.editingTemplateId = null;
+                    document.getElementById('create_template_modal').showModal();
+                },
+
+                openEditTemplateModal(template) {
+                    this.newTemplateName = template.name;
+                    this.editingTemplateId = template.id;
                     document.getElementById('create_template_modal').showModal();
                 },
 
                 async submitCreateTemplate() {
                     try {
-                        const res = await this.apiCall('/templates', 'POST', { name: this.newTemplateName, description: 'New custom template' });
-                        this.templates.unshift(res.template);
-                        this.selectTemplate(res.template);
+                        if (this.editingTemplateId) {
+                            const res = await this.apiCall('/templates/' + this.editingTemplateId, 'PUT', { name: this.newTemplateName });
+                            const index = this.templates.findIndex(t => t.id === this.editingTemplateId);
+                            if (index !== -1) {
+                                this.templates[index].name = res.template.name;
+                                if (this.activeTemplate && this.activeTemplate.id === this.editingTemplateId) {
+                                    this.activeTemplate.name = res.template.name;
+                                }
+                            }
+                        } else {
+                            const res = await this.apiCall('/templates', 'POST', { name: this.newTemplateName, description: 'New custom template' });
+                            this.templates.unshift(res.template);
+                            this.selectTemplate(res.template);
+                        }
                         document.getElementById('create_template_modal').close();
+                        this.refreshIcons();
                     } catch (e) {
                         console.error(e);
-                        this.showAlert("Error", "Failed to create template.");
+                        this.showAlert("Error", "Failed to save template.");
                     }
+                },
+
+                deleteTemplate(template) {
+                    this.showConfirm('Delete Template', `Are you sure you want to delete "${template.name}"? This cannot be undone.`, async () => {
+                        try {
+                            await this.apiCall('/templates/' + template.id, 'DELETE');
+                            this.templates = this.templates.filter(t => t.id !== template.id);
+                            if (this.activeTemplate && this.activeTemplate.id === template.id) {
+                                if (this.templates.length > 0) {
+                                    this.selectTemplate(this.templates[0]);
+                                } else {
+                                    this.activeTemplate = null;
+                                }
+                            }
+                            this.refreshIcons();
+                        } catch (e) {
+                            console.error(e);
+                            this.showAlert("Error", "Failed to delete template.");
+                        }
+                    });
                 },
 
                 applyToProject() {
@@ -498,7 +558,7 @@
                     this.activeTemplate.tracks_count = (this.activeTemplate.tracks_count || 0) + 1;
                     this.activeTrackId = newTrack.id;
                     this.hasUnsavedChanges = true;
-                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                    this.refreshIcons();
                 },
 
                 addCustomTrack() {
@@ -526,7 +586,7 @@
                     this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
                     this.hasUnsavedChanges = true;
                     this.editMilestone(newPhase);
-                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                    this.refreshIcons();
                 },
 
                 addChildMilestone(parentId) {
@@ -536,7 +596,7 @@
                     this.activeTemplate.milestones_count = (this.activeTemplate.milestones_count || 0) + 1;
                     this.hasUnsavedChanges = true;
                     this.editMilestone(newChild);
-                    this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                    this.refreshIcons();
                 },
 
                 editMilestone(ms) {
@@ -592,7 +652,7 @@
                         }
                         
                         this.hasUnsavedChanges = false;
-                        this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
+                        this.refreshIcons();
                         
                     } catch(e) {
                         console.error('API Catch Error:', e);

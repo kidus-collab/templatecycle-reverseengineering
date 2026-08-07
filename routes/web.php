@@ -8,6 +8,8 @@ use App\Http\Controllers\ProjectController;
 Route::controller(ProjectTemplateController::class)->group(function () {
     Route::get('/', 'index')->name('templates');
     Route::post('/templates', 'store')->name('templates.store');
+    Route::put('/templates/{template}', 'update')->name('templates.update');
+    Route::delete('/templates/{template}', 'destroy')->name('templates.destroy');
     Route::post('/templates/{template}/apply', 'apply')->name('templates.apply');
     Route::put('/templates/{template}/sync', 'sync')->name('templates.sync');
     
