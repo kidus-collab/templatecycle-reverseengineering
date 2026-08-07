@@ -37,7 +37,7 @@
                     <i data-lucide="folder-kanban" class="w-3.5 h-3.5 shrink-0 {{ request()->routeIs('templates') ? 'text-amber-800' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                     <span class="truncate">Templates</span>
                 </div>
-                <span class="{{ request()->routeIs('templates') ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-100 text-gray-500' }} text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">6</span>
+                <span class="{{ request()->routeIs('templates') ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-100 text-gray-500' }} text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">{{ \App\Models\Template\ProjectTemplate::count() }}</span>
             </a>
 
             <!-- Project Portfolio Navigation Link -->
@@ -48,7 +48,7 @@
                     <i data-lucide="layout-grid" class="w-3.5 h-3.5 shrink-0 {{ request()->routeIs('projects.*') ? 'text-amber-800' : 'text-gray-400 group-hover:text-gray-600' }}"></i>
                     <span class="truncate">Project Portfolio</span>
                 </div>
-                <span class="{{ request()->routeIs('projects.*') ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-100 text-gray-500' }} text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">6</span>
+                <span class="{{ request()->routeIs('projects.*') ? 'bg-amber-900/10 text-amber-900' : 'bg-gray-100 text-gray-500' }} text-[10px] font-bold px-1.5 py-0.2 rounded-full shrink-0">{{ \App\Models\Project\Project::count() }}</span>
             </a>
         </nav>
     </div>

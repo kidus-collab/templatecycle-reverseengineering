@@ -59,25 +59,36 @@ class TemplateSyncService
         $incomingMilestoneIds = [];
         $tempIdMap = [];
 
-        foreach ($milestonesData as $msData) {
-            // Process parent phase
+        // The frontend sends a flat array. Separate parents and children to process parents first (so temp IDs are resolved).
+        $parentMilestones = array_filter($milestonesData, fn($ms) => empty($ms['parent_id']));
+        $childMilestones = array_filter($milestonesData, fn($ms) => !empty($ms['parent_id']));
+
+        // 1. Process parent phases
+        foreach ($parentMilestones as $msData) {
             $this->processMilestone($track, $msData, null, $incomingMilestoneIds, $tempIdMap);
             
-            // Process nested sub_milestones if they exist in the payload
+            // Fallback for nested sub_milestones (if frontend format ever changes to nested)
             if (!empty($msData['sub_milestones'])) {
-                // Get the parent ID. If it was temporary, we must resolve it.
                 $parentId = $msData['id'] ?? null;
                 if (is_string($parentId) && isset($tempIdMap[$parentId])) {
                     $parentId = $tempIdMap[$parentId];
                 }
-                
                 foreach ($msData['sub_milestones'] as $subData) {
                     $this->processMilestone($track, $subData, $parentId, $incomingMilestoneIds, $tempIdMap);
                 }
             }
         }
 
-        // Delete milestones that are no longer present
+        // 2. Process child milestones from the flat array
+        foreach ($childMilestones as $msData) {
+            $parentId = $msData['parent_id'];
+            if (is_string($parentId) && isset($tempIdMap[$parentId])) {
+                $parentId = $tempIdMap[$parentId];
+            }
+            $this->processMilestone($track, $msData, $parentId, $incomingMilestoneIds, $tempIdMap);
+        }
+
+        // 3. Delete milestones that are no longer present
         $milestonesToDelete = array_diff($existingMilestoneIds, $incomingMilestoneIds);
         if (!empty($milestonesToDelete)) {
             Milestone::whereIn('id', $milestonesToDelete)->delete();

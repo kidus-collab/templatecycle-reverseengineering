@@ -461,7 +461,9 @@
                     if (!res.ok) {
                         const errorData = await res.text();
                         console.error('API Error Response:', errorData);
-                        throw new Error('API request failed');
+                        const err = new Error('API request failed');
+                        try { err.apiResponse = JSON.parse(errorData); } catch(e){}
+                        throw err;
                     }
                     return res.json();
                 },
@@ -593,8 +595,14 @@
                         this.$nextTick(() => { if (window.lucide) window.lucide.createIcons(); });
                         
                     } catch(e) {
-                        console.error(e);
-                        this.showAlert("Error", "Failed to save changes.");
+                        console.error('API Catch Error:', e);
+                        let errMsg = "Failed to save changes.";
+                        if (e.message !== 'API request failed') {
+                            errMsg = e.message;
+                        } else if (e.apiResponse) {
+                            errMsg = e.apiResponse.message || errMsg;
+                        }
+                        this.showAlert("Error", errMsg);
                     } finally {
                         this.isSaving = false;
                     }

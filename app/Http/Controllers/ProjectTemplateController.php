@@ -81,21 +81,27 @@ class ProjectTemplateController extends Controller
 
     public function sync(Request $request, ProjectTemplate $template): JsonResponse
     {
-        $validated = $request->validate([
-            'tracks' => 'array|nullable',
-            'tracks.*.id' => 'nullable',
-            'tracks.*.name' => 'required|string',
-            'tracks.*.milestones' => 'array|nullable',
-            'tracks.*.milestones.*.id' => 'nullable',
-            'tracks.*.milestones.*.title' => 'required|string',
-            'tracks.*.milestones.*.parent_id' => 'nullable',
-        ]);
+        try {
+            $validated = $request->validate([
+                'tracks' => 'array|nullable',
+                'tracks.*.id' => 'nullable',
+                'tracks.*.name' => 'required|string',
+                'tracks.*.milestones' => 'array|nullable',
+                'tracks.*.milestones.*.id' => 'nullable',
+                'tracks.*.milestones.*.title' => 'required|string',
+                'tracks.*.milestones.*.parent_id' => 'nullable',
+            ]);
 
-        $this->syncService->syncTemplate($template, $validated['tracks'] ?? []);
-        
-        // Reload and return the updated template
-        $template = $this->repository->getTemplateById($template->id);
-        return response()->json(['success' => true, 'template' => $template]);
+            $this->syncService->syncTemplate($template, $validated['tracks'] ?? []);
+            
+            // Reload and return the updated template
+            $template = $this->repository->getTemplateById($template->id);
+            return response()->json(['success' => true, 'template' => $template]);
+        } catch (\Exception $e) {
+            \Illuminate\Support\Facades\Log::error('SYNC ERROR: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error($e->getTraceAsString());
+            throw $e;
+        }
     }
 
     public function storeTrack(ProjectTemplateRequest $request, ProjectTemplate $template): JsonResponse
