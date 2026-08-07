@@ -3,7 +3,7 @@
 Template Cycle is a Laravel + Alpine.js application designed to streamline project tracking by utilizing reusable Stage Templates. It allows project managers to create templates with predefined tracks, milestones, and sub-milestones, which can then be instantly applied to new projects to track progress uniformly across the portfolio.
 
 ## Tech Stack
-- **Backend:** Laravel 11 (PHP 8.2+)
+- **Backend:** Laravel 13.17 (PHP 8.4+)
 - **Frontend:** Blade Templates, TailwindCSS, Alpine.js
 - **Database:** SQLite
 - **Icons:** Lucide Icons
