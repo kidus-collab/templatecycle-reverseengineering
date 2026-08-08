@@ -34,12 +34,12 @@ class ProjectTemplateController extends Controller
         $validated = $request->validated();
         $project = Project::findOrFail($validated['project_id']);
 
-        // Update project template link
-        $project->project_template_id = $template->id;
-        $project->save();
-        $projectCreationService->applyTemplateToProject($template, $project->id);
-
-        return redirect()->route('templates')->with('success', "Template '{$template->name}' applied to project '{$project->name}' successfully!");
+        try {
+            $projectCreationService->applyTemplateToProject($template, $project->id);
+            return redirect()->route('templates')->with('success', "Template '{$template->name}' applied to project '{$project->name}' successfully!");
+        } catch (\Exception $e) {
+            return redirect()->route('templates')->with('error', $e->getMessage());
+        }
     }
 
     // Template store , update & delete methods

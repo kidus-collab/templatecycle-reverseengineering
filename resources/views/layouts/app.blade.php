@@ -62,9 +62,10 @@
 
         <!-- Toast Notifications -->
         <div x-show="toast.show" x-transition 
-             class="fixed top-4 right-4 z-50 alert alert-success shadow-md text-white text-xs font-medium max-w-sm py-2 px-3"
+             class="fixed top-4 right-4 z-50 alert shadow-md text-white text-xs font-medium max-w-sm py-2 px-3 flex items-center gap-2"
+             :class="toast.type === 'error' ? 'bg-red-500 border-red-600' : 'alert-success'"
              style="display: none;">
-            <i data-lucide="check-circle-2" class="w-4 h-4"></i>
+            <i :data-lucide="toast.type === 'error' ? 'alert-circle' : 'check-circle-2'" class="w-4 h-4"></i>
             <span x-text="toast.message"></span>
         </div>
 
@@ -78,7 +79,7 @@
                 mobileMenuOpen: false,
                 sidebarWidth: 240,
                 isResizing: false,
-                toast: { show: false, message: '' },
+                toast: { show: false, message: '', type: 'success' },
 
                 startResize(e) {
                     this.isResizing = true;
@@ -103,10 +104,22 @@
                     window.addEventListener('mouseup', stopDrag);
                 },
 
-                showNotification(msg) {
+                init() {
+                    @if(session('success'))
+                        this.showNotification("{{ session('success') }}", 'success');
+                    @endif
+                    
+                    @if(session('error'))
+                        this.showNotification("{{ session('error') }}", 'error');
+                    @endif
+                },
+
+                showNotification(msg, type = 'success') {
                     this.toast.message = msg;
+                    this.toast.type = type;
                     this.toast.show = true;
-                    setTimeout(() => { this.toast.show = false; }, 3000);
+                    this.refreshIcons();
+                    setTimeout(() => { this.toast.show = false; }, 4000);
                 },
 
                 refreshIcons() {

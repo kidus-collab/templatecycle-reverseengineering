@@ -31,4 +31,5 @@ Route::controller(ProjectController::class)->group(function () {
     Route::put('/projects/{project}', 'update')->name('projects.update');
     Route::put('/projects/{project}/progress', 'updateProgress')->name('projects.progress.update');
     Route::delete('/projects/{project}', 'destroy')->name('projects.destroy');
+    Route::delete('/projects/{project}/template', 'removeTemplate')->name('projects.template.remove');
 });

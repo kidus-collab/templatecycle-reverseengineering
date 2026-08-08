@@ -86,6 +86,16 @@ class ProjectController extends Controller
     }
 
     /**
+     * Remove the applied template from a project.
+     */
+    public function removeTemplate(Project $project)
+    {
+        $this->projectService->removeTemplateFromProject($project);
+        
+        return response()->json(['success' => true]);
+    }
+
+    /**
      * Remove the specified project from database.
      */
     public function destroy(Project $project)

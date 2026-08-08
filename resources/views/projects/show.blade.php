@@ -60,6 +60,11 @@
                 </div>
 
                 <div class="flex items-center gap-3">
+                    @if($project->project_template_id)
+                        <button @click="removeTemplate" class="btn btn-xs bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg font-semibold normal-case">
+                            Remove Template
+                        </button>
+                    @endif
                     <span x-show="hasUnsavedChanges" x-cloak class="text-[10px] font-bold text-amber-600 bg-amber-100/50 px-2 py-1 rounded-md animate-pulse">Unsaved Changes</span>
                     <button @click="saveProgress" :disabled="isSaving || !hasUnsavedChanges" class="btn btn-xs bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg font-semibold normal-case">
                         <span x-text="isSaving ? 'Saving...' : 'Save Progress'"></span>
@@ -164,6 +169,32 @@
             </div>
         </div>
 
+        <!-- Custom Confirm Modal -->
+        <dialog id="custom_confirm_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
+                <h3 class="font-bold text-base text-gray-900" x-text="confirmConfig.title"></h3>
+                <p class="py-2 text-[12px] text-gray-500" x-text="confirmConfig.message"></p>
+                <div class="modal-action mt-4 flex justify-end gap-2">
+                    <button type="button" @click="document.getElementById('custom_confirm_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case text-gray-600">Cancel</button>
+                    <button type="button" @click="confirmConfig.onConfirm()" class="btn bg-red-50 hover:bg-red-100 text-red-600 border-red-200 btn-xs rounded-lg normal-case shadow-none px-4">Yes, proceed</button>
+                </div>
+            </div>
+        </dialog>
+
+        <!-- Custom Alert Modal -->
+        <dialog id="custom_alert_modal" class="modal">
+            <div class="modal-box bg-white rounded-xl border border-gray-200 p-5 max-w-sm">
+                <h3 class="font-bold text-base text-red-600 flex items-center gap-2">
+                    <i data-lucide="alert-circle" class="w-4 h-4"></i>
+                    <span x-text="alertConfig.title"></span>
+                </h3>
+                <p class="py-2 text-[12px] text-gray-600" x-text="alertConfig.message"></p>
+                <div class="modal-action mt-2">
+                    <button type="button" @click="document.getElementById('custom_alert_modal').close()" class="btn bg-gray-100 hover:bg-gray-200 text-gray-700 btn-xs rounded-lg normal-case shadow-none px-4">OK</button>
+                </div>
+            </div>
+        </dialog>
+
     </div>
 
     <script>
@@ -172,6 +203,25 @@
                 isSaving: false,
                 hasUnsavedChanges: false,
                 
+                confirmConfig: { title: '', message: '', onConfirm: null },
+                alertConfig: { title: '', message: '' },
+
+                showConfirm(title, message, callback) {
+                    this.confirmConfig.title = title;
+                    this.confirmConfig.message = message;
+                    this.confirmConfig.onConfirm = () => {
+                        document.getElementById('custom_confirm_modal').close();
+                        if (callback) callback();
+                    };
+                    document.getElementById('custom_confirm_modal').showModal();
+                },
+
+                showAlert(title, message) {
+                    this.alertConfig.title = title;
+                    this.alertConfig.message = message;
+                    document.getElementById('custom_alert_modal').showModal();
+                },
+
                 init() {
                     this.$nextTick(() => {
                         if (window.lucide) window.lucide.createIcons();
@@ -274,11 +324,38 @@
                         this.hasUnsavedChanges = false;
                         
                     } catch (err) {
-                        alert('Error saving progress.');
+                        this.showAlert('Error', 'Error saving progress.');
                         console.error(err);
                     } finally {
                         this.isSaving = false;
                     }
+                },
+
+                removeTemplate() {
+                    this.showConfirm(
+                        'Remove Template',
+                        'Are you sure you want to remove the template? This will delete all phases and milestones from this project. This cannot be undone.',
+                        async () => {
+                            try {
+                                const res = await fetch(`/projects/{{ $project->ref }}/template`, {
+                                    method: 'DELETE',
+                                    headers: {
+                                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                                        'Accept': 'application/json'
+                                    }
+                                });
+                                if (res.ok) {
+                                    window.location.reload();
+                                } else {
+                                    const err = await res.json();
+                                    this.showAlert('Error', err.message || 'Failed to remove template');
+                                }
+                            } catch (err) {
+                                this.showAlert('Error', 'Error removing template');
+                                console.error(err);
+                            }
+                        }
+                    );
                 }
             }
         }

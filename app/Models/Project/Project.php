@@ -20,6 +20,7 @@ class Project extends Model
         'name',
         'tags',
         'more_tags',
+        'project_template_id',
     ];
 
     protected $casts = [

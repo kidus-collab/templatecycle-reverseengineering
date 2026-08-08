@@ -92,9 +92,16 @@ class ProjectCreationService
     {
         $project = $this->projectRepo->findById($projectId);
 
+        if ($project->project_template_id) {
+            throw new \Exception('This project already has a template applied. Please remove the current template first.');
+        }
+
+        $project->update(['project_template_id' => $template->id]);
+        
         $template->load('tracks.milestones');
 
         if ($project->details) {
+            $project->details->update(['applied_track' => $template->name]);
             foreach ($template->tracks as $track) {
                 // Get only root milestones (Phases)
                 $templatePhases = $track->milestones->whereNull('parent_id');
@@ -136,5 +143,24 @@ class ProjectCreationService
                 }
             }
         }
+    }
+
+    public function removeTemplateFromProject(Project $project): void
+    {
+        if ($project->details) {
+            $phases = \App\Models\Project\ProjectPhase::where('project_detail_id', $project->details->id)->get();
+            foreach ($phases as $phase) {
+                \App\Models\Project\MilestoneCheckpoint::where('project_phase_id', $phase->id)->delete();
+                $phase->delete();
+            }
+
+            $project->details->update([
+                'applied_track' => 'No Template',
+                'progress_percent' => 0,
+                'status' => 'Upcoming'
+            ]);
+        }
+
+        $project->update(['project_template_id' => null]);
     }
 }
