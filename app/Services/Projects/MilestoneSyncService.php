@@ -5,5 +5,5 @@ namespace App\Services\Projects;
 
 class MilestoneSyncService
 {
-    // Placeholder for future logic involving syncing project milestones.
+    //  syncing project milestones.
 }

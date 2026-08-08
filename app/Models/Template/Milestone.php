@@ -13,13 +13,13 @@ class Milestone extends Model
     protected $fillable = [
         'parent_id',
         'title',
-    ]; 
-    
+    ];
+
     protected $casts = [
         'title' => 'string',
     ];
-    
-    public function track(): BelongsTo 
+
+    public function track(): BelongsTo
     {
         return $this->belongsTo(Track::class);
     }

@@ -13,16 +13,16 @@ class MilestoneCheckpoint extends Model
         'project_phase_id',
         'track_id',
         'parent_id',
-        'title', 
-        'done', 
+        'title',
+        'done',
     ];
 
     protected $casts = [
         'title' => 'string',
         'done' => 'boolean',
-    ]; 
+    ];
 
-    public function projectPhase(): BelongsTo 
+    public function projectPhase(): BelongsTo
     {
         return $this->belongsTo(ProjectPhase::class);
     }

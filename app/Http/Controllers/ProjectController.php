@@ -3,19 +3,17 @@
 declare(strict_types=1);
 
 namespace App\Http\Controllers;
-use \Illuminate\Http\Request;
-use App\Repositories\Project\ProjectRepositoryInterface;
-use App\Repositories\Project\ProjectRepository;
 
 use App\Http\Requests\ProjectRequest;
-use App\Services\Projects\ProjectCreationService as ProjectService;
-
-use App\Models\Template\ProjectTemplate;
 use App\Models\Project\Project;
+use App\Models\Template\ProjectTemplate;
+use App\Repositories\Project\ProjectRepositoryInterface;
+use App\Services\Projects\ProjectCreationService as ProjectService;
 
 class ProjectController extends Controller
 {
-   private ProjectRepositoryInterface $projectRepository;
+    private ProjectRepositoryInterface $projectRepository;
+
     private ProjectService $projectService;
 
     public function __construct(
@@ -31,7 +29,7 @@ class ProjectController extends Controller
      */
     public function index()
     {
-        $projects =  $this->projectRepository->getAllProjectsWithDetails();
+        $projects = $this->projectRepository->getAllProjectsWithDetails();
         $templates = ProjectTemplate::all();
 
         return view('projects.index', compact('projects', 'templates'));
@@ -44,8 +42,8 @@ class ProjectController extends Controller
     {
         $validated = $request->validated();
 
-        $template = !empty($validated['project_template_id']) 
-            ? ProjectTemplate::with('tracks.milestones')->find($validated['project_template_id']) 
+        $template = ! empty($validated['project_template_id'])
+            ? ProjectTemplate::with('tracks.milestones')->find($validated['project_template_id'])
             : null;
 
         $project = $this->projectService->createProjectWithTemplate($validated, $template);
@@ -69,7 +67,7 @@ class ProjectController extends Controller
     public function update(ProjectRequest $request, Project $project)
     {
         $validated = $request->validated();
-        
+
         $this->projectRepository->updateProjectDetail($project, $validated);
 
         return redirect()->back()->with('success', "Project '{$project->name}' updated successfully!");

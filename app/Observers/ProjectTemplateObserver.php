@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Observers;
 
 use App\Models\Template\ProjectTemplate;
-// @deprecated Cache has been disabled for templates to prevent serialization errors
 // use Illuminate\Support\Facades\Cache;
 
 /**

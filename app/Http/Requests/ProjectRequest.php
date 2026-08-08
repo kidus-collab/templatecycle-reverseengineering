@@ -23,7 +23,7 @@ class ProjectRequest extends FormRequest
     public function rules(): array
     {
         // Rules for Both Create & Update
-        $rules = [ 'name' => 'required|string|max:255'];
+        $rules = ['name' => 'required|string|max:255'];
 
         // Check if this is the progress update route
         if ($this->routeIs('projects.progress.update')) {
@@ -37,20 +37,20 @@ class ProjectRequest extends FormRequest
                 'phases.*.checkpoints.*.done' => 'required|boolean',
             ];
         }
-        // 2. Rules for CREATE 
+        // 2. Rules for CREATE
         if ($this->isMethod('POST')) {
             $rules['name'] = 'required|string|max:255|unique:projects,name';
             $rules['ref'] = 'required|string|max:255|unique:projects,ref';
             $rules['project_template_id'] = 'nullable|exists:project_templates,id';
         }
-           
-        // 3. Rules for  UPDATE 
+
+        // 3. Rules for  UPDATE
         if ($this->isMethod('PUT') || $this->isMethod('PATCH')) {
             $projectId = $this->route('project') ? $this->route('project')->id : null;
-            
+
             if ($projectId) {
-                $rules['name'] = 'required|string|max:255|unique:projects,name,' . $projectId;
-                $rules['ref'] = 'required|string|max:255|unique:projects,ref,' . $projectId;
+                $rules['name'] = 'required|string|max:255|unique:projects,name,'.$projectId;
+                $rules['ref'] = 'required|string|max:255|unique:projects,ref,'.$projectId;
             }
             $rules['status'] = 'nullable|string|max:255';
         }
@@ -58,7 +58,7 @@ class ProjectRequest extends FormRequest
         return $rules;
     }
 
-    // Error Message for duplciate records 
+    // Error Message for duplciate records
     public function messages(): array
     {
         return [

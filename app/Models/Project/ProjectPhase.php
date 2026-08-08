@@ -20,14 +20,14 @@ class ProjectPhase extends Model
     ];
 
     protected $casts = [
-        'name'=> 'string',
+        'name' => 'string',
         'status' => 'string',
         'progress' => 'integer',
         'milestones_count' => 'integer',
         'sub_milestones_count' => 'integer',
     ];
 
-    public function projectDetail(): BelongsTo 
+    public function projectDetail(): BelongsTo
     {
         return $this->belongsTo(ProjectDetail::class);
     }

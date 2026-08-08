@@ -21,7 +21,7 @@ class ProjectDetail extends Model
         'status' => 'string',
     ];
 
-    public function project(): BelongsTo 
+    public function project(): BelongsTo
     {
         return $this->belongsTo(Project::class);
     }

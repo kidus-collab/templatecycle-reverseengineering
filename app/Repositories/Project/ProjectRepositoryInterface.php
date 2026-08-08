@@ -14,12 +14,16 @@ interface ProjectRepositoryInterface
 {
     public function findById(int $id): Project;
     public function getAllProjectsWithDetails(): Collection;
+
     public function createProject(array $data): Project;
     public function createProjectDetail(array $data, int $projectId): ProjectDetail;
     public function createProjectPhase(array $data, int $detailId): ProjectPhase;
     public function createMilestoneCheckpoint(array $data, int $phaseId, int $trackId): MilestoneCheckpoint;
+
     public function getProjectById(Project $project): Project;
+
     public function updateProjectDetail(Project $project, array $data): Project;
     public function deleteProject(Project $project): void;
+    
     public function syncProjectProgress(Project $project, array $phasesData): void;
 }
