@@ -116,15 +116,34 @@
                         <div x-show="phase.expanded" x-cloak class="border-t border-gray-100 bg-gray-50/50 p-4 space-y-2">
                             <div class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-1">STAGE CHECKPOINTS</div>
                             
-                            <div class="space-y-1.5">
-                                <template x-for="cp in phase.checkpoints" :key="cp.title">
-                                    <label class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200/80 hover:border-amber-300 cursor-pointer transition-colors">
-                                        <div class="flex items-center gap-2.5">
-                                            <input type="checkbox" x-model="cp.done" @change="recalculatePhaseProgress(phase)" class="checkbox checkbox-xs checkbox-warning" />
-                                            <span class="text-xs font-medium text-gray-800" :class="{'line-through text-gray-400': cp.done}" x-text="cp.title"></span>
+                            <div class="space-y-3">
+                                <!-- Top Level Milestones Only -->
+                                <template x-for="cp in phase.checkpoints.filter(c => !c.parent_id)" :key="cp.title">
+                                    <div class="space-y-1.5">
+                                        <!-- Top Level Milestone Checkbox -->
+                                        <label class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200/80 hover:border-amber-300 cursor-pointer transition-colors shadow-2xs">
+                                            <div class="flex items-center gap-2.5">
+                                                <input type="checkbox" x-model="cp.done" @change="recalculatePhaseProgress(phase)" class="checkbox checkbox-sm checkbox-warning" />
+                                                <span class="text-xs font-bold text-gray-800" :class="{'line-through text-gray-400': cp.done}" x-text="cp.title"></span>
+                                            </div>
+                                            <span :class="cp.done ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 bg-gray-100'" class="text-[9px] font-mono px-1.5 py-0.2 rounded border" :class="cp.done ? 'border-emerald-200' : 'border-gray-200'" x-text="cp.done ? 'Done' : 'Pending'"></span>
+                                        </label>
+
+                                        <!-- Sub-Milestones Checkboxes -->
+                                        <div x-show="cp.subCheckpoints && cp.subCheckpoints.length > 0" class="pl-5 space-y-1 mt-1 border-l-2 border-amber-100 ml-4 relative">
+                                            <template x-for="sub in cp.subCheckpoints" :key="sub.title">
+                                                <label class="flex items-center justify-between p-1.5 rounded-lg bg-white/60 border border-gray-100 hover:border-amber-200 hover:bg-amber-50/30 cursor-pointer transition-colors relative">
+                                                    <!-- Little tree connector line -->
+                                                    <div class="absolute -left-5 top-1/2 w-4 border-t-2 border-amber-100"></div>
+                                                    
+                                                    <div class="flex items-center gap-2 relative z-10">
+                                                        <input type="checkbox" x-model="sub.done" @change="recalculatePhaseProgress(phase)" class="checkbox checkbox-xs checkbox-warning rounded-sm" />
+                                                        <span class="text-[11px] font-medium text-gray-600" :class="{'line-through text-gray-400': sub.done}" x-text="sub.title"></span>
+                                                    </div>
+                                                </label>
+                                            </template>
                                         </div>
-                                        <span :class="cp.done ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 bg-gray-100'" class="text-[9px] font-mono px-1.5 py-0.2 rounded" x-text="cp.done ? 'Done' : 'Pending'"></span>
-                                    </label>
+                                    </div>
                                 </template>
                             </div>
                         </div>
@@ -140,13 +159,24 @@
         function projectDetail() {
             return {
                 isSaving: false,
-                phases: @json($project->phases).map(p => ({ 
-                    ...p, 
-                    expanded: p.status === 'In Progress',
-                    milestonesCount: p.milestones_count + '/' + (p.milestones_count > 0 ? p.milestones_count : 0),
-                    subMilestonesCount: p.sub_milestones_count + '/' + (p.sub_milestones_count > 0 ? p.sub_milestones_count : 0),
-                    checkpoints: p.milestone_checkpoints || p.milestoneCheckpoints || []
-                })),
+                phases: @json($project->phases).map(p => {
+                    const allCheckpoints = p.milestone_checkpoints || p.milestoneCheckpoints || [];
+                    
+                    // Wire up the nested sub-checkpoints reference array to the top-level parent checkpoints
+                    allCheckpoints.forEach(cp => {
+                        if (!cp.parent_id) {
+                            cp.subCheckpoints = allCheckpoints.filter(sub => sub.parent_id === cp.id);
+                        }
+                    });
+
+                    return { 
+                        ...p, 
+                        expanded: p.status === 'In Progress',
+                        milestonesCount: p.milestones_count + '/' + (p.milestones_count > 0 ? p.milestones_count : 0),
+                        subMilestonesCount: p.sub_milestones_count + '/' + (p.sub_milestones_count > 0 ? p.sub_milestones_count : 0),
+                        checkpoints: allCheckpoints
+                    };
+                }),
 
                 recalculatePhaseProgress(phase) {
                     const total = phase.checkpoints.length;
