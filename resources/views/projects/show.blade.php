@@ -33,11 +33,11 @@
             <div class="bg-white p-3.5 rounded-xl border border-gray-200/90 shadow-2xs">
                 <div class="text-[9px] font-bold tracking-widest text-gray-400 uppercase">OVERALL PROGRESS</div>
                 <div class="flex items-center justify-between mt-1">
-                    <span class="text-xl font-bold text-gray-900">{{ $project->details->progress_percent ?? 0 }}%</span>
-                    <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200">{{ $project->details->status ?? 'Upcoming' }}</span>
+                    <span class="text-xl font-bold text-gray-900" x-text="overallProgress + '%'"></span>
+                    <span class="text-[10px] font-semibold text-amber-800 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200" x-text="overallStatus"></span>
                 </div>
                 <div class="w-full bg-gray-100 h-1.5 rounded-full mt-2 overflow-hidden">
-                    <div class="bg-amber-500 h-full rounded-full transition-all duration-300" style="width: {{ $project->details->progress_percent ?? 0 }}%"></div>
+                    <div class="bg-amber-500 h-full rounded-full transition-all duration-300" :style="`width: ${overallProgress}%`"></div>
                 </div>
             </div>
 
@@ -59,9 +59,12 @@
                     <p class="text-[11px] text-gray-500">Phases and milestone checkpoints derived from the active template stage track.</p>
                 </div>
 
-                <button @click="saveProgress" :disabled="isSaving" class="btn btn-xs bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg font-semibold normal-case">
-                    <span x-text="isSaving ? 'Saving...' : 'Save Progress'"></span>
-                </button>
+                <div class="flex items-center gap-3">
+                    <span x-show="hasUnsavedChanges" x-cloak class="text-[10px] font-bold text-amber-600 bg-amber-100/50 px-2 py-1 rounded-md animate-pulse">Unsaved Changes</span>
+                    <button @click="saveProgress" :disabled="isSaving || !hasUnsavedChanges" class="btn btn-xs bg-amber-100/90 hover:bg-amber-200 text-amber-950 border border-amber-300 rounded-lg font-semibold normal-case">
+                        <span x-text="isSaving ? 'Saving...' : 'Save Progress'"></span>
+                    </button>
+                </div>
             </div>
 
             <!-- Phase Milestones Sequence List -->
@@ -70,9 +73,7 @@
                     <div class="bg-white rounded-xl border border-gray-200/90 shadow-2xs overflow-hidden transition-all duration-150">
                         
                         <!-- Phase Header Bar -->
-                        <div 
-                            @click="phase.expanded = !phase.expanded"
-                            class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-amber-50/30 transition-colors">
+                        <div class="p-3.5 flex items-center justify-between hover:bg-gray-50/50 transition-colors">
                             
                             <div class="flex items-center gap-3 min-w-0">
                                 <span class="text-xs font-bold text-gray-400 font-mono" x-text="'0' + (index + 1)"></span>
@@ -106,8 +107,10 @@
                                     class="text-[10px] font-semibold px-2 py-0.5 rounded-full border" 
                                     x-text="phase.status"></span>
 
-                                <!-- Expand Chevron Icon -->
-                                <i data-lucide="chevron-down" class="w-4 h-4 text-gray-400 transition-transform duration-200" :class="{'rotate-180': phase.expanded}"></i>
+                                <!-- Expand Chevron Icon Button -->
+                                <button type="button" @click.stop="phase.expanded = !phase.expanded" class="p-1.5 rounded-md bg-white hover:bg-amber-100 text-gray-500 hover:text-amber-700 transition-colors border border-gray-200 shadow-sm flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-amber-200 cursor-pointer">
+                                    <i data-lucide="chevron-down" class="w-4 h-4 transition-transform duration-200" :class="{'rotate-180': phase.expanded}"></i>
+                                </button>
                             </div>
 
                         </div>
@@ -120,24 +123,32 @@
                                 <!-- Top Level Milestones Only -->
                                 <template x-for="cp in phase.checkpoints.filter(c => !c.parent_id)" :key="cp.title">
                                     <div class="space-y-1.5">
-                                        <!-- Top Level Milestone Checkbox -->
-                                        <label class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200/80 hover:border-amber-300 cursor-pointer transition-colors shadow-2xs">
-                                            <div class="flex items-center gap-2.5">
-                                                <input type="checkbox" x-model="cp.done" @change="recalculatePhaseProgress(phase)" class="checkbox checkbox-sm checkbox-warning" />
+                                        <!-- Top Level Milestone Checkbox & Expand Toggle -->
+                                        <div class="flex items-center justify-between p-2 rounded-lg bg-white border border-gray-200/80 hover:border-amber-300 transition-colors shadow-2xs">
+                                            <label class="flex items-center gap-2.5 cursor-pointer flex-1">
+                                                <input type="checkbox" x-model="cp.done" @change="toggleParent(cp, phase)" class="checkbox checkbox-sm checkbox-warning" />
                                                 <span class="text-xs font-bold text-gray-800" :class="{'line-through text-gray-400': cp.done}" x-text="cp.title"></span>
+                                            </label>
+                                            
+                                            <div class="flex items-center gap-2 shrink-0">
+                                                <!-- Expanded State Toggle -->
+                                                <button type="button" x-show="cp.subCheckpoints && cp.subCheckpoints.length > 0" @click.stop="cp.expanded = !cp.expanded" class="p-1 rounded-md bg-white hover:bg-amber-100 text-gray-500 hover:text-amber-700 transition-colors border border-gray-200 shadow-sm flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-amber-200 cursor-pointer">
+                                                    <i data-lucide="chevron-down" class="w-3.5 h-3.5 transition-transform duration-200" :class="{'rotate-180': !cp.expanded}"></i>
+                                                </button>
+                                                <!-- Fallback Badge for ones without submilestones -->
+                                                <span x-show="!cp.subCheckpoints || cp.subCheckpoints.length === 0" :class="cp.done ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 bg-gray-100'" class="text-[9px] font-mono px-1.5 py-0.2 rounded border" :class="cp.done ? 'border-emerald-200' : 'border-gray-200'" x-text="cp.done ? 'Done' : 'Pending'"></span>
                                             </div>
-                                            <span :class="cp.done ? 'text-emerald-600 bg-emerald-50' : 'text-gray-400 bg-gray-100'" class="text-[9px] font-mono px-1.5 py-0.2 rounded border" :class="cp.done ? 'border-emerald-200' : 'border-gray-200'" x-text="cp.done ? 'Done' : 'Pending'"></span>
-                                        </label>
+                                        </div>
 
                                         <!-- Sub-Milestones Checkboxes -->
-                                        <div x-show="cp.subCheckpoints && cp.subCheckpoints.length > 0" class="pl-5 space-y-1 mt-1 border-l-2 border-amber-100 ml-4 relative">
+                                        <div x-show="cp.expanded && cp.subCheckpoints && cp.subCheckpoints.length > 0" class="pl-5 space-y-1 mt-1 border-l-2 border-amber-100 ml-4 relative">
                                             <template x-for="sub in cp.subCheckpoints" :key="sub.title">
                                                 <label class="flex items-center justify-between p-1.5 rounded-lg bg-white/60 border border-gray-100 hover:border-amber-200 hover:bg-amber-50/30 cursor-pointer transition-colors relative">
                                                     <!-- Little tree connector line -->
                                                     <div class="absolute -left-5 top-1/2 w-4 border-t-2 border-amber-100"></div>
                                                     
                                                     <div class="flex items-center gap-2 relative z-10">
-                                                        <input type="checkbox" x-model="sub.done" @change="recalculatePhaseProgress(phase)" class="checkbox checkbox-xs checkbox-warning rounded-sm" />
+                                                        <input type="checkbox" x-model="sub.done" @change="toggleChild(cp, phase)" class="checkbox checkbox-xs checkbox-warning rounded-sm" />
                                                         <span class="text-[11px] font-medium text-gray-600" :class="{'line-through text-gray-400': sub.done}" x-text="sub.title"></span>
                                                     </div>
                                                 </label>
@@ -159,12 +170,23 @@
         function projectDetail() {
             return {
                 isSaving: false,
+                hasUnsavedChanges: false,
+                
+                init() {
+                    this.$nextTick(() => {
+                        if (window.lucide) window.lucide.createIcons();
+                        setTimeout(() => {
+                            if (window.lucide) window.lucide.createIcons();
+                        }, 50);
+                    });
+                },
                 phases: @json($project->phases).map(p => {
                     const allCheckpoints = p.milestone_checkpoints || p.milestoneCheckpoints || [];
                     
                     // Wire up the nested sub-checkpoints reference array to the top-level parent checkpoints
                     allCheckpoints.forEach(cp => {
                         if (!cp.parent_id) {
+                            cp.expanded = true; // default to expanded
                             cp.subCheckpoints = allCheckpoints.filter(sub => sub.parent_id === cp.id);
                         }
                     });
@@ -177,8 +199,39 @@
                         checkpoints: allCheckpoints
                     };
                 }),
+                
+                get overallProgress() {
+                    if (this.phases.length === 0) return 0;
+                    const total = this.phases.reduce((sum, p) => sum + p.progress, 0);
+                    return Math.round(total / this.phases.length);
+                },
+                
+                get overallStatus() {
+                    const prog = this.overallProgress;
+                    if (prog === 100) return 'Completed';
+                    if (prog > 0) return 'In Progress';
+                    return 'Upcoming';
+                },
+
+                toggleParent(cp, phase) {
+                    // Ticking parent ticks/unticks all sub-milestones
+                    if (cp.subCheckpoints && cp.subCheckpoints.length > 0) {
+                        cp.subCheckpoints.forEach(sub => sub.done = cp.done);
+                    }
+                    this.recalculatePhaseProgress(phase);
+                },
+                
+                toggleChild(parentCp, phase) {
+                    // Ticking a child checks if all children are done to update the parent
+                    if (parentCp.subCheckpoints && parentCp.subCheckpoints.length > 0) {
+                        const allDone = parentCp.subCheckpoints.every(sub => sub.done);
+                        parentCp.done = allDone;
+                    }
+                    this.recalculatePhaseProgress(phase);
+                },
 
                 recalculatePhaseProgress(phase) {
+                    this.hasUnsavedChanges = true;
                     const total = phase.checkpoints.length;
                     if (total === 0) return;
                     const doneCount = phase.checkpoints.filter(c => c.done).length;
@@ -186,9 +239,6 @@
                     if (phase.progress === 100) phase.status = 'Completed';
                     else if (phase.progress > 0) phase.status = 'In Progress';
                     else phase.status = 'Upcoming';
-                    
-                    // Auto-save progress to the backend immediately when a checkbox is toggled
-                    this.saveProgress();
                 },
                 
                 async saveProgress() {
@@ -220,8 +270,8 @@
                             throw new Error('Failed to save progress');
                         }
                         
-                        // Reload to update overall metrics
-                        window.location.reload();
+                        // We successfully saved! Remove unsaved changes badge
+                        this.hasUnsavedChanges = false;
                         
                     } catch (err) {
                         alert('Error saving progress.');

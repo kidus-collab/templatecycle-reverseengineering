@@ -307,7 +307,11 @@
                 <p class="py-1 text-[11px] text-gray-500">Set up a new reusable delivery template.</p>
                 <div class="form-control w-full mt-3">
                     <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Template Name</span></label>
-                    <input type="text" x-model="newTemplateName" class="input input-sm input-bordered w-full rounded-lg text-xs" placeholder="e.g., Infrastructure Baseline" />
+                    <input type="text" x-model="newTemplateName" class="input input-sm input-bordered w-full rounded-lg text-xs focus:outline-none focus:ring-0 focus:border-gray-300" placeholder="e.g., Infrastructure Baseline" />
+                </div>
+                <div class="form-control w-full mt-2">
+                    <label class="label py-0.5"><span class="label-text font-medium text-[11px]">Description (Optional)</span></label>
+                    <textarea x-model="newTemplateDescription" class="textarea textarea-bordered w-full rounded-lg text-xs focus:outline-none focus:ring-0 focus:border-gray-300" placeholder="e.g., Standard workflow for all infrastructure projects" rows="2"></textarea>
                 </div>
                 <div class="modal-action mt-5 flex justify-end gap-2">
                     <button type="button" @click="document.getElementById('create_template_modal').close()" class="btn btn-ghost btn-xs rounded-lg normal-case">Cancel</button>
@@ -384,6 +388,7 @@
                 
                 editingTemplateId: null,
                 newTemplateName: '',
+                newTemplateDescription: '',
                 hasUnsavedChanges: false,
                 isSaving: false,
                 tempIdCounter: 1,
@@ -491,12 +496,14 @@
 
                 openCreateModal() {
                     this.newTemplateName = '';
+                    this.newTemplateDescription = '';
                     this.editingTemplateId = null;
                     document.getElementById('create_template_modal').showModal();
                 },
 
                 openEditTemplateModal(template) {
                     this.newTemplateName = template.name;
+                    this.newTemplateDescription = template.description || '';
                     this.editingTemplateId = template.id;
                     document.getElementById('create_template_modal').showModal();
                 },
@@ -504,16 +511,18 @@
                 async submitCreateTemplate() {
                     try {
                         if (this.editingTemplateId) {
-                            const res = await this.apiCall('/templates/' + this.editingTemplateId, 'PUT', { name: this.newTemplateName });
+                            const res = await this.apiCall('/templates/' + this.editingTemplateId, 'PUT', { name: this.newTemplateName, description: this.newTemplateDescription });
                             const index = this.templates.findIndex(t => t.id === this.editingTemplateId);
                             if (index !== -1) {
                                 this.templates[index].name = res.template.name;
+                                this.templates[index].description = res.template.description;
                                 if (this.activeTemplate && this.activeTemplate.id === this.editingTemplateId) {
                                     this.activeTemplate.name = res.template.name;
+                                    this.activeTemplate.description = res.template.description;
                                 }
                             }
                         } else {
-                            const res = await this.apiCall('/templates', 'POST', { name: this.newTemplateName, description: 'New custom template' });
+                            const res = await this.apiCall('/templates', 'POST', { name: this.newTemplateName, description: this.newTemplateDescription });
                             this.templates.unshift(res.template);
                             this.selectTemplate(res.template);
                         }
@@ -634,6 +643,9 @@
                         const payload = { tracks: this.activeTemplate.tracks || [] };
                         const res = await this.apiCall(`/templates/${this.activeTemplate.id}/sync`, 'PUT', payload);
                         
+                        // Capture the active track name before overwriting activeTemplate so we can re-select it
+                        const currentTrackName = this.activeTrack ? this.activeTrack.name : null;
+
                         // Update local template with DB version (to get real IDs)
                         const index = this.templates.findIndex(t => t.id === res.template.id);
                         if (index !== -1) {
@@ -643,7 +655,7 @@
                         
                         // Try to keep the active track selected if it still exists
                         if (this.activeTrackId && this.activeTemplate.tracks) {
-                            const stillExists = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId || t.name === this.activeTrack.name);
+                            const stillExists = this.activeTemplate.tracks.find(t => t.id === this.activeTrackId || (currentTrackName && t.name === currentTrackName));
                             if (stillExists) {
                                 this.activeTrackId = stillExists.id;
                             } else {
